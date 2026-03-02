@@ -27,30 +27,10 @@ Whether the addition of some new elements will be useful to you needs to be asse
 python3 -m pip install -U zvt
 ```
 
-### Main ui
+### Main UI
 
-#### Dash & Plotly UI
-
-> It's good for backtest and research, but it is not applicable for real-time market data and user interaction.
-
-After the installation is complete, enter zvt on the command line
-```shell
-zvt
-```
-open [http://127.0.0.1:8050/](http://127.0.0.1:8050/)
-
-> The example shown here relies on data, factor, trader, please read [docs](https://zvt.readthedocs.io/en/latest/)
-
-<p align="center"><img src='https://raw.githubusercontent.com/zvtvz/zvt/master/docs/imgs/zvt-factor.png'/></p>
-<p align="center"><img src='https://raw.githubusercontent.com/zvtvz/zvt/master/docs/imgs/zvt-trader.png'/></p>
-
-> The core concept of the system is visual, and the name of the interface corresponds to it one-to-one, so it is also uniform and extensible.
-
-> You can write and run the strategy in your favorite ide, and then view its related targets, factor, signal and performance on the UI.
-
-#### Rest api and standalone UI
-> It is more flexible and more scalable, more suitable for handling real-time market data and user interaction. 
-> Combined with the dynamic tag system provided by ZVT, it offers a trading approach that combines AI with human intervention.
+REST API + zvt_ui (Next.js frontend as submodule). Flexible and scalable, suitable for real-time market data and user interaction.
+Combined with the dynamic tag system provided by ZVT, it offers a trading approach that combines AI with human intervention.
 
 - Init tag system
 
@@ -82,7 +62,13 @@ open [http://127.0.0.1:8090/docs](http://127.0.0.1:8090/docs)
 
 Front end source code: https://github.com/zvtvz/zvt_ui
 
-Change the env file:
+When cloning from source, zvt_ui is included as a submodule. Use:
+```shell
+git clone --recurse-submodules https://github.com/zvtvz/zvt.git
+```
+If you already cloned, run `git submodule update --init zvt_ui` to fetch zvt_ui into `zvt_ui/`.
+
+Change the env file in `zvt_ui/.env`:
 https://github.com/zvtvz/zvt_ui/blob/main/.env
 
 Set {your server IP} to zvt_server IP
@@ -91,7 +77,7 @@ Set {your server IP} to zvt_server IP
 NEXT_PUBLIC_SERVER = {your server IP}
 ```
 
-Then refer to the frontend's README to start the frontend service.
+Then from `zvt_ui/` directory run `npm install && npm run dev` (or refer to the frontend's README).
 
 open [http://127.0.0.1:3000/trade](http://127.0.0.1:3000/trade)
 
@@ -515,7 +501,7 @@ if __name__ == '__main__':
 So, writing a strategy is not that complicated.
 Just use your imagination, find the relation of the price and the events.
 
-Then refresh [http://127.0.0.1:8050/](http://127.0.0.1:8050/)，check the performance of your strategy.
+Check the strategy performance via zvt_ui at [http://127.0.0.1:3000/trade](http://127.0.0.1:3000/trade).
 
 More examples is in [Strategy example](https://github.com/zvtvz/zvt/tree/master/examples/trader)
 
@@ -651,9 +637,10 @@ the data could be updated from different provider, this make the system stable.
 
 ### Clone
 
+```shell
+git clone --recurse-submodules https://github.com/zvtvz/zvt.git
 ```
-git clone https://github.com/zvtvz/zvt.git
-```
+Or if already cloned: `git submodule update --init zvt_ui` to fetch the zvt_ui frontend.
 
 set up virtual env(python>=3.8),install requirements
 ```

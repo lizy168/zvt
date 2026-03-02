@@ -25,5 +25,4 @@ API
     zvt.tag
     zvt.trader
     zvt.trading
-    zvt.ui
     zvt.utils

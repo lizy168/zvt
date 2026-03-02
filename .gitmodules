@@ -1,0 +1,3 @@
+[submodule "zvt_ui"]
+	path = zvt_ui
+	url = https://github.com/zvtvz/zvt_ui.git

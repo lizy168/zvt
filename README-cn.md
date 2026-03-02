@@ -43,26 +43,8 @@ python3 -m pip install -U zvt
 
 #### 主界面
 
-#### Dash & Plotly UI
-> 适用于回测和研究，不太适用于实时行情和用户交互
-
-安装完成后，在命令行下输入 zvt
-```shell
-zvt
-```
-打开 [http://127.0.0.1:8050/](http://127.0.0.1:8050/)
-
-> 这里展示的例子依赖后面的下载历史数据，数据更新请参考后面文档
-
-<p align="center"><img src='https://raw.githubusercontent.com/zvtvz/zvt/master/docs/imgs/zvt-factor.png'/></p>
-<p align="center"><img src='https://raw.githubusercontent.com/zvtvz/zvt/master/docs/imgs/zvt-trader.png'/></p>
-
-> 系统的核心概念是可视化的，界面的名称与其一一对应，因此也是统一可扩展的。
-
-> 你可以在你喜欢的ide里编写和运行策略，然后运行界面查看其相关的标的，因子，信号和净值展示。
-
-#### 前后端分离的UI
-> 更灵活和可扩展，更适合于处理实时行情和用户交互，结合ZVT的动态tag系统，提供了一种量化结合主观的交易方式
+REST API + zvt_ui（Next.js 前端，以 submodule 形式包含）。更灵活和可扩展，适合实时行情和用户交互，
+结合 ZVT 的动态 tag 系统，提供量化结合主观的交易方式。
 
 - 初始化tag系统
 
@@ -92,9 +74,11 @@ open [http://127.0.0.1:8090/docs](http://127.0.0.1:8090/docs)
 
 - 部署前端
 
-前端代码: https://github.com/zvtvz/zvt_ui
+前端代码: https://github.com/zvtvz/zvt_ui (已作为 submodule 包含在 zvt 仓库中)
 
-修改前端环境文件:
+克隆时使用 `git clone --recurse-submodules` 可同时获取 zvt_ui。若已克隆，执行 `git submodule update --init zvt_ui` 获取 `zvt_ui/` 目录。
+
+修改 `zvt_ui/.env` 环境文件:
 https://github.com/zvtvz/zvt_ui/blob/main/.env
 
 设置 {your server IP}, 即zvt_server服务的地址
@@ -103,7 +87,7 @@ https://github.com/zvtvz/zvt_ui/blob/main/.env
 NEXT_PUBLIC_SERVER = {your server IP}
 ```
 
-然后参考前端的readme启动前端服务
+在 `zvt_ui/` 目录下执行 `npm install && npm run dev` 启动前端服务。
 
 打开 [http://127.0.0.1:3000/trade](http://127.0.0.1:3000/trade)
 
@@ -527,7 +511,7 @@ if __name__ == '__main__':
 所以，写一个策略其实还是很简单的嘛。
 你可以发挥想象力，社保重仓买买买，外资重仓买买买，董事长跟小姨子跑了卖卖卖......
 
-然后，刷新一下[http://127.0.0.1:8050/](http://127.0.0.1:8050/)，看你运行策略的performance
+可通过 zvt_ui 查看策略表现 [http://127.0.0.1:3000/trade](http://127.0.0.1:3000/trade)
 
 更多可参考[策略例子](https://github.com/zvtvz/zvt/tree/master/examples/trader)
 

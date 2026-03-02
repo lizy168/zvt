@@ -49,10 +49,7 @@ setup(
         "openpyxl==3.1.1",
         "demjson3==3.0.6",
         "plotly==5.13.0",
-        "dash==2.18.2",
         "jqdatapy==0.1.8",
-        "dash-bootstrap-components==1.3.1",
-        "dash_daq==0.5.0",
         "scikit-learn==1.5.2",
         "fastapi==0.110.0",
         "fastapi-pagination==0.12.23",
@@ -70,7 +67,6 @@ setup(
     long_description_content_type="text/markdown",
     entry_points={
         "console_scripts": [
-            "zvt = zvt.main:main",
             "zvt_server = zvt.zvt_server:main",
             "zvt_export = zvt.plugin:export",
         ],
