@@ -10,10 +10,10 @@ from zvt.informer import EmailInformer
 def inform_email(entity_ids, entity_type, target_date, title, provider):
     msg = "no targets"
     if entity_ids:
-        entities = get_entities(provider=provider, entity_type=entity_type, entity_ids=entity_ids, return_type="domain")
+        entities = get_entities(provider=provider, entity_type=entity_type, entity_ids=entity_ids, return_type="dict")
         assert len(entities) == len(entity_ids)
 
-        infos = [f"{entity.name}({entity.code})" for entity in entities]
+        infos = [f"{e['name']}({e['code']})" for e in entities]
         msg = "\n".join(infos) + "\n"
 
         EmailInformer().send_message(zvt_config["email_username"], f"{target_date} {title}", msg)

@@ -217,21 +217,19 @@ def get_main_tags():
 
 
 def get_main_tag_by_sub_tag(sub_tag):
-    datas: List[SubTagInfo] = SubTagInfo.query_data(filters=[SubTagInfo.tag == sub_tag], return_type="domain")
+    datas: List[dict] = SubTagInfo.query_data(filters=[SubTagInfo.tag == sub_tag], return_type="dict")
     if datas:
-        return datas[0].main_tag
-    else:
-        return _get_default_concept_main_tag_mapping().get(sub_tag, "其他")
+        return datas[0]["main_tag"]
+    return _get_default_concept_main_tag_mapping().get(sub_tag, "其他")
 
 
 def get_main_tag_by_industry(industry_name):
-    datas: List[IndustryInfo] = IndustryInfo.query_data(
-        filters=[IndustryInfo.industry_name == industry_name], return_type="domain"
+    datas: List[dict] = IndustryInfo.query_data(
+        filters=[IndustryInfo.industry_name == industry_name], return_type="dict"
     )
     if datas:
-        return datas[0].main_tag
-    else:
-        _get_default_industry_main_tag_mapping().get(industry_name, "其他")
+        return datas[0]["main_tag"]
+    return _get_default_industry_main_tag_mapping().get(industry_name, "其他")
 
 
 def get_sub_tags():

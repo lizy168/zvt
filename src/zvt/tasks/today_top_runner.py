@@ -60,14 +60,14 @@ def calculate_top(clear_em=True):
             try:
                 to_added = top_up_entity_ids
                 if add_all_to_em:
-                    stock_pools: List[StockPools] = StockPools.query_data(
+                    stock_pools: List[dict] = StockPools.query_data(
                         filters=[StockPools.stock_pool_name == "今日强势"],
                         order=StockPools.timestamp.desc(),
                         limit=1,
-                        return_type="domain",
+                        return_type="dict",
                     )
                     if stock_pools:
-                        to_added = stock_pools[0].entity_ids
+                        to_added = stock_pools[0].get("entity_ids") or []
                         if len(to_added) > 500:
                             to_added = get_top_vol(entity_ids=to_added, limit=500)
 

@@ -40,13 +40,13 @@ def calculate_shoot():
 
             if shoot_up:
                 over_write = False
-                stock_pools: List[StockPools] = StockPools.query_data(
+                stock_pools: List[dict] = StockPools.query_data(
                     filters=[StockPools.stock_pool_name == stock_pool_name],
                     order=StockPools.timestamp.desc(),
                     limit=1,
-                    return_type="domain",
+                    return_type="dict",
                 )
-                if stock_pools and (len(stock_pools[0].entity_ids) > 80):
+                if stock_pools and (len((stock_pools[0].get("entity_ids") or [])) > 80):
                     over_write = True
 
                 refresh_stock_pool(

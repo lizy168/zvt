@@ -43,6 +43,7 @@ class EMStockTopTenFreeRecorder(TimestampsDataRecorder):
                 ],
                 limit=1,
                 return_type="domain",
+                session=self.session,
             )
             if ii:
                 holder.holding_values = holder.holding_ratio * ii[0].holding_values / ii[0].holding_ratio
@@ -69,7 +70,9 @@ class EMStockTopTenFreeRecorder(TimestampsDataRecorder):
                     # 机构
                     if item["IS_HOLDORG"] == "1":
                         domains: List[ActorMeta] = ActorMeta.query_data(
-                            filters=[ActorMeta.code == item["HOLDER_CODE"]], return_type="domain"
+                            filters=[ActorMeta.code == item["HOLDER_CODE"]],
+                            return_type="domain",
+                            session=self.session,
                         )
                         if not domains:
                             actor_type = ActorType.corporation.value

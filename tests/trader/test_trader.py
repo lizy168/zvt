@@ -43,19 +43,19 @@ def test_single_trader():
         entity_id="stock_sz_000338",
         start_timestamp=buy_timestamp,
         end_timestamp=buy_timestamp,
-        return_type="domain",
+        return_type="dict",
     )[0]
     sell_price = get_kdata(
         provider="joinquant",
         entity_id="stock_sz_000338",
         start_timestamp=sell_timestamp,
         end_timestamp=sell_timestamp,
-        return_type="domain",
+        return_type="dict",
     )[0]
 
     sell_lost = trader.account_service.slippage + trader.account_service.sell_cost
     buy_lost = trader.account_service.slippage + trader.account_service.buy_cost
-    pct = (sell_price.close * (1 - sell_lost) - buy_price.close * (1 + buy_lost)) / buy_price.close * (1 + buy_lost)
+    pct = (sell_price['close'] * (1 - sell_lost) - buy_price['close'] * (1 + buy_lost)) / buy_price['close'] * (1 + buy_lost)
 
     profit_rate = (account.all_value - account.input_money) / account.input_money
 
@@ -111,19 +111,19 @@ def test_multiple_trader():
         entity_id="stock_sz_000338",
         start_timestamp=buy_timestamp,
         end_timestamp=buy_timestamp,
-        return_type="domain",
+        return_type="dict",
     )[0]
     sell_price = get_kdata(
         provider="joinquant",
         entity_id="stock_sz_000338",
         start_timestamp=sell_timestamp,
         end_timestamp=sell_timestamp,
-        return_type="domain",
+        return_type="dict",
     )[0]
 
     sell_lost = trader.account_service.slippage + trader.account_service.sell_cost
     buy_lost = trader.account_service.slippage + trader.account_service.buy_cost
-    pct1 = (sell_price.close * (1 - sell_lost) - buy_price.close * (1 + buy_lost)) / buy_price.close * (1 + buy_lost)
+    pct1 = (sell_price['close'] * (1 - sell_lost) - buy_price['close'] * (1 + buy_lost)) / buy_price['close'] * (1 + buy_lost)
 
     # 601318
     buy_price = get_kdata(
@@ -131,17 +131,17 @@ def test_multiple_trader():
         entity_id="stock_sh_601318",
         start_timestamp=buy_timestamp,
         end_timestamp=buy_timestamp,
-        return_type="domain",
+        return_type="dict",
     )[0]
     sell_price = get_kdata(
         provider="joinquant",
         entity_id="stock_sh_601318",
         start_timestamp=sell_timestamp,
         end_timestamp=sell_timestamp,
-        return_type="domain",
+        return_type="dict",
     )[0]
 
-    pct2 = (sell_price.close * (1 - sell_lost) - buy_price.close * (1 + buy_lost)) / buy_price.close * (1 + buy_lost)
+    pct2 = (sell_price['close'] * (1 - sell_lost) - buy_price['close'] * (1 + buy_lost)) / buy_price['close'] * (1 + buy_lost)
 
     profit_rate = (account.all_value - account.input_money) / account.input_money
 

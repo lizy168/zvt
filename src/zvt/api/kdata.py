@@ -75,9 +75,9 @@ def get_latest_kdata_date(
     if entity_type == "indexus":
         filters = [data_schema.entity_id == "indexus_us_SPX"]
     latest_data = data_schema.query_data(
-        provider=provider, filters=filters, order=data_schema.timestamp.desc(), limit=1, return_type="domain"
+        provider=provider, filters=filters, order=data_schema.timestamp.desc(), limit=1, return_type="dict"
     )
-    return to_pd_timestamp(latest_data[0].timestamp)
+    return to_pd_timestamp(latest_data[0]['timestamp'])
 
 
 def get_kdata_schema(

@@ -9,12 +9,12 @@ from zvt.domain import BlockStock, Block, Stock, LimitUpInfo
 
 def get_limit_up_reasons(entity_id):
     info = LimitUpInfo.query_data(
-        entity_id=entity_id, order=LimitUpInfo.timestamp.desc(), limit=1, return_type="domain"
+        entity_id=entity_id, order=LimitUpInfo.timestamp.desc(), limit=1, return_type="dict"
     )
 
     topics = []
-    if info and info[0].reason:
-        topics = topics + info[0].reason.split("+")
+    if info and info[0].get("reason"):
+        topics = topics + info[0]["reason"].split("+")
     return topics
 
 
@@ -81,15 +81,15 @@ def build_default_tags(codes, provider="em"):
         block_stocks = BlockStock.query_data(
             provider=provider,
             filters=[BlockStock.code.in_(industry_codes), BlockStock.stock_code == code],
-            return_type="domain",
+            return_type="dict",
         )
         if block_stocks:
             block_stock = block_stocks[0]
             tags.append(
                 {
-                    "code": block_stock.stock_code,
-                    "name": block_stock.stock_name,
-                    "tag": industry_to_tag(block_stock.name),
+                    "code": block_stock["stock_code"],
+                    "name": block_stock["stock_name"],
+                    "tag": industry_to_tag(block_stock["name"]),
                     "reason": "",
                 }
             )
@@ -206,11 +206,11 @@ def group_stocks_by_tag(entities, hidden_tags=None):
 
 
 def build_stock_tags_by_block(block_name, tag, hidden_tag):
-    block_stocks = BlockStock.query_data(filters=[BlockStock.name == block_name], return_type="domain")
+    block_stocks = BlockStock.query_data(filters=[BlockStock.name == block_name], return_type="dict")
     datas = [
         {
-            "code": block_stock.stock_code,
-            "name": block_stock.stock_name,
+            "code": block_stock["stock_code"],
+            "name": block_stock["stock_name"],
             "tag": tag,
             "hidden_tag": hidden_tag,
             "reason": "",

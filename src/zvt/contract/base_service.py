@@ -69,7 +69,7 @@ class OneStateService(StatefulService):
 
     def __init__(self) -> None:
         super().__init__()
-        self.state_domain = self.state_schema.get_by_id(id=self.name)
+        self.state_domain = self.state_schema.get_by_id(session=self.state_session, id=self.name)
         if self.state_domain:
             self.state: dict = self.decode_state(self.state_domain.state)
         else:
@@ -92,21 +92,24 @@ class EntityStateService(StatefulService):
     def __init__(self, entity_ids) -> None:
         super().__init__()
         self.entity_ids = entity_ids
-        state_domains: List[StateMixin] = self.state_schema.query_data(
-            filters=[self.state_schema.state_name == self.name], entity_ids=self.entity_ids, return_type="domain"
+        state_domains: List[dict] = self.state_schema.query_data(
+            filters=[self.state_schema.state_name == self.name],
+            entity_ids=self.entity_ids,
+            session=self.state_session,
+            return_type="dict",
         )
 
         #: entity_id:state
         self.states: dict = {}
         if state_domains:
             for state in state_domains:
-                self.states[state.entity_id] = self.decode_state(state.state)
+                self.states[state["entity_id"]] = self.decode_state(state["state"])
 
     def persist_state(self, entity_id):
         state = self.states.get(entity_id)
         if state:
             domain_id = f"{self.name}_{entity_id}"
-            state_domain = self.state_schema.get_by_id(domain_id)
+            state_domain = self.state_schema.get_by_id(self.state_session, domain_id)
             state_str = self.encode_state(state)
             if not state_domain:
                 state_domain = self.state_schema(id=domain_id, entity_id=entity_id, state_name=self.name)

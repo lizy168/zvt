@@ -94,13 +94,13 @@ class BaseEMStockKdataRecorder(FixedCycleDataRecorder):
                 level=self.level,
                 adjust_type=self.adjust_type,
                 order=self.data_schema.timestamp.desc(),
-                return_type="domain",
+                return_type="dict",
             )
             if datas:
                 latest_kdata = datas[0]
-                check_df = df[df["timestamp"] == latest_kdata.timestamp]
+                check_df = df[df["timestamp"] == latest_kdata["timestamp"]]
                 if pd_is_not_null(check_df):
-                    old = latest_kdata.close
+                    old = latest_kdata["close"]
                     new = check_df.iloc[0, :]["close"]
                     # 相同时间的close不同，表明前复权需要重新计算
                     if round(old, 2) != round(new, 2):
@@ -110,7 +110,7 @@ class BaseEMStockKdataRecorder(FixedCycleDataRecorder):
                     else:
                         return False
                 else:
-                    self.logger.warning(f"no data found for {entity_id} at {latest_kdata.timestamp}, 前复权检查失败")
+                    self.logger.warning(f"no data found for {entity_id} at {latest_kdata['timestamp']}, 前复权检查失败")
         return False
 
     def record(self, entity, start, end, size, timestamps):
@@ -152,10 +152,10 @@ class BaseEMStockKdataRecorder(FixedCycleDataRecorder):
                 entity_id=entity.id,
                 order=self.data_schema.timestamp.asc(),
                 limit=1,
-                return_type="domain",
+                return_type="dict",
             )
             if kdatas:
-                timestamp = kdatas[0].timestamp
+                timestamp = kdatas[0]["timestamp"]
 
                 self.logger.info(f"fill {entity.name} list_date as {timestamp}")
 

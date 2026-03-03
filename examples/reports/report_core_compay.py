@@ -40,12 +40,12 @@ def report_core_company():
             long_targets = my_selector.get_open_long_targets(timestamp=target_date)
             if long_targets:
                 stocks = get_entities(
-                    provider="joinquant", entity_schema=Stock, entity_ids=long_targets, return_type="domain"
+                    provider="joinquant", entity_schema=Stock, entity_ids=long_targets, return_type="dict"
                 )
 
                 # add them to eastmoney
                 try:
-                    codes = [stock.code for stock in stocks]
+                    codes = [s["code"] for s in stocks]
                     add_to_eastmoney(codes=codes, entity_type="stock", group="core")
                 except Exception as e:
                     email_action.send_message(

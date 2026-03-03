@@ -37,9 +37,9 @@ def inform(
     msg = "no targets"
     if entity_ids:
         entities = get_entities(
-            provider=entity_provider, entity_type=entity_type, entity_ids=entity_ids, return_type="domain"
+            provider=entity_provider, entity_type=entity_type, entity_ids=entity_ids, return_type="dict"
         )
-        entities = [entity for entity in entities if entity.entity_id in entity_ids]
+        entities = [e for e in entities if e["entity_id"] in entity_ids]
         print(len(entities))
         print(len(entity_ids))
         assert len(entities) == len(entity_ids)

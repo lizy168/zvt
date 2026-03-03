@@ -59,8 +59,8 @@ def create_stock_pool_info(create_stock_pool_info_model: CreateStockPoolInfoMode
 @work_router.get("/get_stock_pool_info", response_model=List[StockPoolInfoModel])
 def get_stock_pool_info():
     with contract_api.DBSession(provider="zvt", data_schema=StockPoolInfo)() as session:
-        stock_pool_info: List[StockPoolInfo] = StockPoolInfo.query_data(session=session, return_type="domain")
-        return stock_pool_info
+        stock_pool_info: List[dict] = StockPoolInfo.query_data(session=session, return_type="dict")
+        return [StockPoolInfoModel(**item) for item in stock_pool_info]
 
 
 @work_router.post("/create_stock_pools", response_model=StockPoolsModel)
@@ -76,15 +76,15 @@ def delete_stock_pool(stock_pool_name: str):
 @work_router.get("/get_stock_pools", response_model=Optional[StockPoolsModel])
 def get_stock_pools(stock_pool_name: str):
     with contract_api.DBSession(provider="zvt", data_schema=StockPools)() as session:
-        stock_pools: List[StockPools] = StockPools.query_data(
+        stock_pools: List[dict] = StockPools.query_data(
             session=session,
             filters=[StockPools.stock_pool_name == stock_pool_name],
             order=StockPools.timestamp.desc(),
             limit=1,
-            return_type="domain",
+            return_type="dict",
         )
         if stock_pools:
-            return stock_pools[0]
+            return StockPoolsModel(**stock_pools[0])
         return None
 
 
@@ -94,8 +94,8 @@ def get_main_tag_info():
     Get main_tag info
     """
     with contract_api.DBSession(provider="zvt", data_schema=MainTagInfo)() as session:
-        tags_info: List[MainTagInfo] = MainTagInfo.query_data(session=session, return_type="domain")
-        return tags_info
+        tags_info: List[dict] = MainTagInfo.query_data(session=session, return_type="dict")
+        return [TagInfoModel(**item) for item in tags_info]
 
 
 @work_router.get("/get_sub_tag_info", response_model=List[TagInfoModel])
@@ -104,8 +104,8 @@ def get_sub_tag_info():
     Get sub_tag info
     """
     with contract_api.DBSession(provider="zvt", data_schema=SubTagInfo)() as session:
-        tags_info: List[SubTagInfo] = SubTagInfo.query_data(session=session, return_type="domain")
-        return tags_info
+        tags_info: List[dict] = SubTagInfo.query_data(session=session, return_type="dict")
+        return [TagInfoModel(**item) for item in tags_info]
 
 
 @work_router.get("/get_main_tag_sub_tag_relation", response_model=MainTagSubTagRelation)
@@ -119,8 +119,8 @@ def get_industry_info():
     Get industry info
     """
     with contract_api.DBSession(provider="zvt", data_schema=IndustryInfo)() as session:
-        industry_info: List[IndustryInfo] = IndustryInfo.query_data(session=session, return_type="domain")
-        return industry_info
+        industry_info: List[dict] = IndustryInfo.query_data(session=session, return_type="dict")
+        return [IndustryInfoModel(**item) for item in industry_info]
 
 
 @work_router.get("/get_main_tag_industry_relation", response_model=MainTagIndustryRelation)
@@ -134,8 +134,8 @@ def get_hidden_tag_info():
     Get hidden_tag info
     """
     with contract_api.DBSession(provider="zvt", data_schema=MainTagInfo)() as session:
-        tags_info: List[HiddenTagInfo] = HiddenTagInfo.query_data(session=session, return_type="domain")
-        return tags_info
+        tags_info: List[dict] = HiddenTagInfo.query_data(session=session, return_type="dict")
+        return [TagInfoModel(**item) for item in tags_info]
 
 
 @work_router.post("/create_main_tag_info", response_model=TagInfoModel)
@@ -179,11 +179,11 @@ def query_stock_tags(query_stock_tags_model: QueryStockTagsModel):
     filters = [StockTags.entity_id.in_(query_stock_tags_model.entity_ids)]
 
     with contract_api.DBSession(provider="zvt", data_schema=StockTags)() as session:
-        tags: List[StockTags] = StockTags.query_data(
-            session=session, filters=filters, return_type="domain", order=StockTags.timestamp.desc()
+        tags: List[dict] = StockTags.query_data(
+            session=session, filters=filters, return_type="dict", order=StockTags.timestamp.desc()
         )
-        tags_dict = {tag.entity_id: tag for tag in tags}
-        sorted_tags = [tags_dict[entity_id] for entity_id in query_stock_tags_model.entity_ids]
+        tags_dict = {tag["entity_id"]: tag for tag in tags}
+        sorted_tags = [StockTagsModel(**tags_dict[entity_id]) for entity_id in query_stock_tags_model.entity_ids if entity_id in tags_dict]
         return sorted_tags
 
 
@@ -202,18 +202,16 @@ def query_simple_stock_tags(query_simple_stock_tags_model: QuerySimpleStockTagsM
         )
         entity_tag_map = {item["entity_id"]: item for item in tags}
         result_tags = []
-        stocks = Stock.query_data(provider="em", entity_ids=[tag["entity_id"] for tag in tags], return_type="domain")
-        stocks_map = {item.entity_id: item for item in stocks}
+        stocks: List[dict] = Stock.query_data(provider="em", entity_ids=[tag["entity_id"] for tag in tags], return_type="dict")
+        stocks_map = {item["entity_id"]: item for item in stocks}
         for entity_id in entity_ids:
             tag = entity_tag_map.get(entity_id)
             if not tag:
                 continue
-            tag["name"] = stocks_map.get(entity_id).name
-            if stocks_map.get(entity_id).controlling_holder_parent:
-                tag["controlling_holder_parent"] = stocks_map.get(entity_id).controlling_holder_parent
-            else:
-                tag["controlling_holder_parent"] = stocks_map.get(entity_id).controlling_holder
-            tag["top_ten_ratio"] = stocks_map.get(entity_id).top_ten_ratio
+            stock_meta = stocks_map.get(entity_id) or {}
+            tag["name"] = stock_meta.get("name")
+            tag["controlling_holder_parent"] = stock_meta.get("controlling_holder_parent") or stock_meta.get("controlling_holder")
+            tag["top_ten_ratio"] = stock_meta.get("top_ten_ratio")
             result_tags.append(tag)
         return result_tags
 

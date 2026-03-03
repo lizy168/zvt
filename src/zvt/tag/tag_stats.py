@@ -32,14 +32,14 @@ def build_system_stock_pools(start_date, entity_type, force_update=False):
 
     for stock_pool_name in stock_pool_names:
         if not force_update:
-            datas = StockPools.query_data(
+            datas: List[dict] = StockPools.query_data(
                 limit=1,
                 filters=[StockPools.entity_type == entity_type, StockPools.stock_pool_name == stock_pool_name],
                 order=StockPools.timestamp.desc(),
-                return_type="domain",
+                return_type="dict",
             )
             if datas:
-                start_date = max(next_date(the_time=datas[0].timestamp), start_date)
+                start_date = max(next_date(the_time=datas[0]["timestamp"]), start_date)
 
         df = TopStocks.query_data(
             start_timestamp=start_date,
@@ -90,11 +90,11 @@ def build_stock_pool_tag_stats(
     adjust_type=AdjustType.qfq,
     provider="em",
 ):
-    datas = TagStats.query_data(
+    datas: List[dict] = TagStats.query_data(
         limit=1,
         filters=[TagStats.entity_type == entity_type, TagStats.stock_pool_name == stock_pool_name],
         order=TagStats.timestamp.desc(),
-        return_type="domain",
+        return_type="dict",
     )
     start = target_date
     current_df = None
@@ -103,11 +103,12 @@ def build_stock_pool_tag_stats(
             session = get_db_session("zvt", data_schema=TagStats)
             session.query(TagStats).filter(TagStats.entity_type == entity_type).filter(
                 TagStats.stock_pool_name == stock_pool_name
-            ).filter(TagStats.timestamp == datas[0].timestamp).delete()
+            ).filter(TagStats.timestamp == datas[0]["timestamp"]).delete()
             session.commit()
+            session.close()
             return build_stock_pool_tag_stats(stock_pool_name=stock_pool_name, force_rebuild_latest=False)
 
-        latest_tag_stats_timestamp = datas[0].timestamp
+        latest_tag_stats_timestamp = datas[0]["timestamp"]
         current_df = TagStats.query_data(
             filters=[
                 TagStats.entity_type == entity_type,
@@ -117,21 +118,21 @@ def build_stock_pool_tag_stats(
         )
         start = next_date(the_time=latest_tag_stats_timestamp)
 
-    stock_pools: List[StockPools] = StockPools.query_data(
+    stock_pools: List[dict] = StockPools.query_data(
         start_timestamp=start,
         filters=[StockPools.entity_type == entity_type, StockPools.stock_pool_name == stock_pool_name],
         order=StockPools.timestamp.asc(),
-        return_type="domain",
+        return_type="dict",
     )
     if not stock_pools:
         logger.info(f"no data to build tag stats: {entity_type} {stock_pool_name} {start}")
         return None
 
     for stock_pool in stock_pools:
-        target_date = stock_pool.timestamp
+        target_date = stock_pool["timestamp"]
         logger.info(f"build_stock_pool_tag_stats for {entity_type} {stock_pool_name} {target_date}")
 
-        entity_ids = stock_pool.entity_ids
+        entity_ids = stock_pool["entity_ids"]
         tags_df = StockTags.query_data(
             entity_ids=entity_ids, filters=[StockTags.entity_type == entity_type], return_type="df", index="entity_id"
         )
@@ -202,25 +203,25 @@ def refresh_stock_pool(stock_pool_name, entity_ids, insert_mode=InsertMode.appen
 
 
 def get_tags_order_by_position(stock_pool_name, entity_type="stock"):
-    latest_data = TagStats.query_data(
+    latest_data: List[dict] = TagStats.query_data(
         filters=[TagStats.entity_type == entity_type, TagStats.stock_pool_name == stock_pool_name],
         order=TagStats.timestamp.desc(),
         limit=1,
-        return_type="domain",
+        return_type="dict",
     )
-    target_date = to_pd_timestamp(latest_data[0].timestamp)
+    target_date = to_pd_timestamp(latest_data[0]["timestamp"])
 
-    tag_stats_list: List[TagStats] = TagStats.query_data(
+    tag_stats_list: List[dict] = TagStats.query_data(
         filters=[
             TagStats.timestamp == to_pd_timestamp(target_date),
             TagStats.entity_type == entity_type,
             TagStats.stock_pool_name == stock_pool_name,
         ],
         order=TagStats.position.asc(),
-        return_type="domain",
+        return_type="dict",
     )
 
-    all_tags = [item.main_tag for item in tag_stats_list]
+    all_tags = [item["main_tag"] for item in tag_stats_list]
     main_line_tag1 = all_tags[0:1]
     main_line_tag2 = all_tags[1:2]
     sub_line_tags1 = all_tags[2:4]

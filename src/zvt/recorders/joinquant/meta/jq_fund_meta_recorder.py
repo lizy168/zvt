@@ -32,11 +32,11 @@ class JqChinaFundRecorder(Recorder):
                     filters=[Fund.operate_mode_id == operate_mode_id],
                     order=Fund.timestamp.desc(),
                     limit=1,
-                    return_type="domain",
+                    return_type="dict",
                 )
                 start_timestamp = "2000-01-01"
                 if latest:
-                    start_timestamp = latest[0].timestamp
+                    start_timestamp = latest[0]["timestamp"]
 
                 end_timestamp = min(date_time_by_interval(start_timestamp, 365 * year_count), now_pd_timestamp())
 
@@ -83,6 +83,7 @@ class JqChinaFundStockRecorder(TimeSeriesDataRecorder):
             codes=self.codes,
             return_type="domain",
             provider=self.entity_provider,
+            session=self.session,
             filters=[Fund.underlying_asset_type.in_(("股票型", "混合型")), Fund.end_date.is_(None)],
         )
 

@@ -52,14 +52,14 @@ def get_quote_stats():
 @trading_router.get("/get_query_stock_quote_setting", response_model=Optional[QueryStockQuoteSettingModel])
 def get_query_stock_quote_setting():
     with contract_api.DBSession(provider="zvt", data_schema=QueryStockQuoteSetting)() as session:
-        query_setting: List[QueryStockQuoteSetting] = QueryStockQuoteSetting.query_data(
-            session=session, return_type="domain"
+        query_setting: List[dict] = QueryStockQuoteSetting.query_data(
+            session=session, return_type="dict"
         )
         df = MainTagInfo.query_data(return_type="df")
         tags = df["tag"].tolist()
 
         if query_setting:
-            return QueryStockQuoteSettingModel(stock_pool_name=query_setting[0].stock_pool_name, main_tags=tags)
+            return QueryStockQuoteSettingModel(stock_pool_name=query_setting[0]["stock_pool_name"], main_tags=tags)
         return QueryStockQuoteSettingModel(stock_pool_name="A股", main_tags=tags)
 
 

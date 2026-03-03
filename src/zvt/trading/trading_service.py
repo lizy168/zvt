@@ -101,14 +101,14 @@ def build_trading_plan(build_trading_plan_model: BuildTradingPlanModel):
             assert len(datas) == 1
             plan = datas[0]
         else:
-            datas = Stock.query_data(provider="em", entity_id=stock_id, return_type="domain")
-            stock = datas[0]
+            stock_datas: List[dict] = Stock.query_data(provider="em", entity_id=stock_id, return_type="dict")
+            stock = stock_datas[0] if stock_datas else {}
             plan = TradingPlan(
                 id=plan_id,
                 entity_id=stock_id,
                 stock_id=stock_id,
-                stock_code=stock.code,
-                stock_name=stock.name,
+                stock_code=stock.get("code", ""),
+                stock_name=stock.get("name", ""),
                 trading_date=trading_date,
                 expected_open_pct=build_trading_plan_model.expected_open_pct,
                 buy_price=build_trading_plan_model.buy_price,
@@ -240,14 +240,14 @@ def cal_quote_stats(quote_df):
 
 
 def cal_tag_quote_stats(stock_pool_name):
-    stock_pools: List[StockPools] = StockPools.query_data(
+    stock_pools: List[dict] = StockPools.query_data(
         filters=[StockPools.stock_pool_name == stock_pool_name],
         order=StockPools.timestamp.desc(),
         limit=1,
-        return_type="domain",
+        return_type="dict",
     )
     if stock_pools:
-        entity_ids = stock_pools[0].entity_ids
+        entity_ids = stock_pools[0].get("entity_ids")
     else:
         entity_ids = None
 
@@ -296,14 +296,14 @@ def cal_tag_quote_stats(stock_pool_name):
 
 
 def query_tag_quotes(query_tag_quote_model: QueryTagQuoteModel):
-    stock_pools: List[StockPools] = StockPools.query_data(
+    stock_pools: List[dict] = StockPools.query_data(
         filters=[StockPools.stock_pool_name == query_tag_quote_model.stock_pool_name],
         order=StockPools.timestamp.desc(),
         limit=1,
-        return_type="domain",
+        return_type="dict",
     )
     if stock_pools:
-        entity_ids = stock_pools[0].entity_ids
+        entity_ids = stock_pools[0].get("entity_ids")
     else:
         entity_ids = None
 
@@ -354,24 +354,24 @@ def query_stock_quotes(query_stock_quote_model: QueryStockQuoteModel):
     entity_ids = None
     if query_stock_quote_model.stock_pool_name:
         stock_pool_name = query_stock_quote_model.stock_pool_name
-        stock_pool_info = StockPoolInfo.query_data(
+        stock_pool_info: List[dict] = StockPoolInfo.query_data(
             filters=[StockPoolInfo.stock_pool_name == stock_pool_name],
-            return_type="domain",
+            return_type="dict",
         )
         if not stock_pool_info:
             raise HTTPException(status_code=404, detail=f"Stock pool info {stock_pool_name} not found")
 
         if stock_pool_name != "A股":
-            stock_pools: List[StockPools] = StockPools.query_data(
+            stock_pools: List[dict] = StockPools.query_data(
                 filters=[StockPools.stock_pool_name == stock_pool_name],
                 order=StockPools.timestamp.desc(),
                 limit=1,
-                return_type="domain",
+                return_type="dict",
             )
             if not stock_pools:
                 raise HTTPException(status_code=404, detail=f"Stock pool {stock_pool_name} not found")
             if stock_pools:
-                entity_ids = stock_pools[0].entity_ids
+                entity_ids = stock_pools[0].get("entity_ids")
     else:
         entity_ids = query_stock_quote_model.entity_ids
 
@@ -477,7 +477,7 @@ def build_query_stock_quote_setting(build_query_stock_quote_setting_model: Build
 
 
 def build_default_query_stock_quote_setting():
-    datas = QueryStockQuoteSetting.query_data(ids=["admin_setting"], return_type="domain")
+    datas: List[dict] = QueryStockQuoteSetting.query_data(ids=["admin_setting"], return_type="dict")
     if datas:
         return
     build_query_stock_quote_setting(BuildQueryStockQuoteSettingModel(stock_pool_name="all", main_tags=["消费电子"]))

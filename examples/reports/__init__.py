@@ -70,34 +70,34 @@ def risky_company(the_date=to_pd_timestamp(now_date_time_str()), income_yoy=-0.1
     return list(set(codes))
 
 
-def stocks_with_info(stocks: List[Stock]):
+def stocks_with_info(stocks: List[dict]):
     infos = []
     for stock in stocks:
-        info = f"{stock.name}({stock.code})"
-        summary: List[StockActorSummary] = StockActorSummary.query_data(
-            entity_id=stock.entity_id,
+        info = f"{stock['name']}({stock['code']})"
+        summary: List[dict] = StockActorSummary.query_data(
+            entity_id=stock["entity_id"],
             order=StockActorSummary.timestamp.desc(),
             filters=[StockActorSummary.actor_type == ActorType.raised_fund.value],
             limit=1,
-            return_type="domain",
+            return_type="dict",
         )
         if summary:
             info = (
                 info
-                + f"([{summary[0].timestamp}]共{summary[0].actor_count}家基金持股占比:{float_to_pct_str(summary[0].holding_ratio)}, 变化: {float_to_pct_str(summary[0].change_ratio)})"
+                + f"([{summary[0]['timestamp']}]共{summary[0]['actor_count']}家基金持股占比:{float_to_pct_str(summary[0]['holding_ratio'])}, 变化: {float_to_pct_str(summary[0]['change_ratio'])})"
             )
 
-        summary: List[StockActorSummary] = StockActorSummary.query_data(
-            entity_id=stock.entity_id,
+        summary = StockActorSummary.query_data(
+            entity_id=stock["entity_id"],
             order=StockActorSummary.timestamp.desc(),
             filters=[StockActorSummary.actor_type == ActorType.qfii.value],
             limit=1,
-            return_type="domain",
+            return_type="dict",
         )
         if summary:
             info = (
                 info
-                + f"([{summary[0].timestamp}]共{summary[0].actor_count}家qfii持股占比:{float_to_pct_str(summary[0].holding_ratio)}, 变化: {float_to_pct_str(summary[0].change_ratio)})"
+                + f"([{summary[0]['timestamp']}]共{summary[0]['actor_count']}家qfii持股占比:{float_to_pct_str(summary[0]['holding_ratio'])}, 变化: {float_to_pct_str(summary[0]['change_ratio'])})"
             )
 
         infos.append(info)

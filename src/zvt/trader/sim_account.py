@@ -123,6 +123,7 @@ class SimAccountService(AccountService):
             filters=[AccountStats.trader_name == self.trader_name],
             order=AccountStats.timestamp.desc(),
             limit=1,
+            session=self.session,
             return_type="domain",
         )
         if not records:

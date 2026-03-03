@@ -15,10 +15,10 @@ class EMDragonAndTigerRecorder(Recorder):
 
     def run(self):
         latest_infos = DragonAndTiger.query_data(
-            provider=self.provider, order=DragonAndTiger.timestamp.desc(), limit=1, return_type="domain"
+            provider=self.provider, order=DragonAndTiger.timestamp.desc(), limit=1, return_type="dict"
         )
         if latest_infos:
-            start_date = latest_infos[0].timestamp
+            start_date = latest_infos[0]["timestamp"]
         else:
             start_date = date_time_by_interval(current_date(), -10)
 

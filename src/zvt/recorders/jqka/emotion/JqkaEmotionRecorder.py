@@ -34,10 +34,10 @@ class JqkaLimitUpRecorder(TimestampsDataRecorder):
 
     def init_timestamps(self, entity_item) -> List[pd.Timestamp]:
         latest_infos = LimitUpInfo.query_data(
-            provider=self.provider, order=LimitUpInfo.timestamp.desc(), limit=1, return_type="domain"
+            provider=self.provider, order=LimitUpInfo.timestamp.desc(), limit=1, return_type="dict"
         )
         if latest_infos and not self.force_update:
-            start_date = latest_infos[0].timestamp
+            start_date = latest_infos[0]["timestamp"]
         else:
             # 最近一年的数据
             start_date = date_time_by_interval(current_date(), -360)
@@ -109,10 +109,10 @@ class JqkaLimitDownRecorder(TimestampsDataRecorder):
 
     def init_timestamps(self, entity_item) -> List[pd.Timestamp]:
         latest_infos = LimitDownInfo.query_data(
-            provider=self.provider, order=LimitDownInfo.timestamp.desc(), limit=1, return_type="domain"
+            provider=self.provider, order=LimitDownInfo.timestamp.desc(), limit=1, return_type="dict"
         )
         if latest_infos and not self.force_update:
-            start_date = latest_infos[0].timestamp
+            start_date = latest_infos[0]["timestamp"]
         else:
             # 最近一年的数据
             start_date = date_time_by_interval(current_date(), -360)
@@ -173,10 +173,10 @@ class JqkaEmotionRecorder(TimestampsDataRecorder):
 
     def init_timestamps(self, entity_item) -> List[pd.Timestamp]:
         latest_infos = Emotion.query_data(
-            provider=self.provider, order=Emotion.timestamp.desc(), limit=1, return_type="domain"
+            provider=self.provider, order=Emotion.timestamp.desc(), limit=1, return_type="dict"
         )
         if latest_infos and not self.force_update:
-            start_date = latest_infos[0].timestamp
+            start_date = latest_infos[0]["timestamp"]
         else:
             # 最近一年的数据
             start_date = date_time_by_interval(current_date(), -365)

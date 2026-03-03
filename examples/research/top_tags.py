@@ -21,14 +21,14 @@ def top_tags(data_provider="em", start_timestamp="2020-01-01", end_timestamp="20
                     start_timestamp=query_timestamp,
                     order=Stock1dHfqKdata.timestamp.asc(),
                     limit=1,
-                    return_type="domain",
+                    return_type="dict",
                 )
-                if not kdata or kdata[0].turnover_rate == 0:
+                if not kdata or kdata[0].get("turnover_rate") == 0:
                     if is_same_date(query_timestamp, month_end_date(query_timestamp)):
                         break
                     query_timestamp = date_time_by_interval(query_timestamp)
                     continue
-                cap = kdata[0].turnover / kdata[0].turnover_rate
+                cap = kdata[0]["turnover"] / kdata[0]["turnover_rate"]
                 break
 
             records.append(

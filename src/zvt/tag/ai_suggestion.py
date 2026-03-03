@@ -52,7 +52,7 @@ def set_stock_news_tag_suggestions(stock_news, tag_suggestions, session):
 def build_tag_suggestions(entity_id):
     with contract_api.DBSession(provider="em", data_schema=StockNews)() as session:
         start_date = date_time_by_interval(current_date(), -30)
-        datas: List[StockNews] = StockNews.query_data(
+        datas: List[dict] = StockNews.query_data(
             entity_id=entity_id,
             limit=1,
             order=StockNews.timestamp.desc(),
@@ -60,12 +60,10 @@ def build_tag_suggestions(entity_id):
                 StockNews.timestamp >= start_date,
                 func.json_extract(StockNews.news_analysis, f'$."tag_suggestions"') != None,
             ],
-            return_type="domain",
+            return_type="dict",
+            session=session,
         )
-        if datas:
-            latest_data = datas[0]
-        else:
-            latest_data = None
+        latest_data = datas[0] if datas else None
 
         filters = [
             or_(
@@ -80,8 +78,8 @@ def build_tag_suggestions(entity_id):
         ]
         if latest_data:
             filters = filters + [
-                StockNews.timestamp >= latest_data.timestamp,
-                StockNews.news_code != latest_data.news_code,
+                StockNews.timestamp >= latest_data["timestamp"],
+                StockNews.news_code != latest_data["news_code"],
             ]
 
         stock_news_list: List[StockNews] = StockNews.query_data(

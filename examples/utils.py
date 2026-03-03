@@ -54,12 +54,12 @@ def group_stocks_by_topic(
 
     entity_ids = None
     if entities:
-        entity_ids = [entity.entity_id for entity in entities]
+        entity_ids = [e["entity_id"] for e in entities]
     else:
-        entities = Stock.query_data(provider="em", return_type="domain")
+        entities = Stock.query_data(provider="em", return_type="dict")
 
     for entity in entities:
-        stock_map[entity.entity_id] = {"code": entity.code, "name": entity.name}
+        stock_map[entity["entity_id"]] = {"code": entity["code"], "name": entity["name"]}
 
     filters = None
     if keyword:

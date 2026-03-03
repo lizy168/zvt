@@ -1,7 +1,8 @@
 # -*- coding: utf-8 -*-
+import contextlib
 import logging
 import platform
-from typing import List, Union, Type
+from typing import List, Union, Type, Generator
 
 import pandas as pd
 from sqlalchemy import func, exists, and_
@@ -20,6 +21,8 @@ from zvt.contract.route_registry import get_route_registry
 from zvt.contract.register import ensure_schema_tables_and_indexes
 
 _initialized_storage_ids = set()
+# Cache for bound sessionmaker by storage_id. Avoids re-binding on every call.
+_bound_session_factories: dict = {}
 
 
 def _storage_backend():
@@ -108,51 +111,88 @@ def get_schemas(provider: str) -> List[DeclarativeMeta]:
     return schemas
 
 
-def get_db_session(provider: str, db_name: str = None, data_schema: object = None, force_new: bool = False) -> Session:
+def _get_bound_session_factory(
+    provider: str, db_name: str = None, data_schema: object = None
+):
     """
-    get db session from (provider,db_name) or (provider,data_schema)
-
-    :param provider: data provider
-    :param db_name: db name
-    :param data_schema: data schema
-    :param force_new: True for new session, otherwise use global session
-    :return: db session
+    Get or create a sessionmaker bound to engine, cached by storage_id.
     """
     _ensure_schema_providers_loaded()
     if data_schema:
         db_name = _get_db_name(data_schema=data_schema)
-
-    data_path = zvt_env.get("data_path", ".")
     storage_id = _route_registry().get_storage_id(provider, db_name)
-    engine = get_db_engine(provider=provider, db_name=db_name)
-    session_fac = _storage_backend().get_session_factory(storage_id, data_path)
-    session_fac.configure(bind=engine)
+    if storage_id not in _bound_session_factories:
+        engine = get_db_engine(provider=provider, db_name=db_name)
+        _bound_session_factories[storage_id] = sessionmaker(
+            bind=engine, autocommit=False, autoflush=True
+        )
+    return _bound_session_factories[storage_id]
 
-    if force_new:
-        return session_fac()
 
-    session_key = storage_id
-    session = zvt_context.sessions.get(session_key)
-    # FIXME: should not maintain global session
-    if not session:
-        session = session_fac()
-        zvt_context.sessions[session_key] = session
-    return session
+def get_db_session(
+    provider: str, db_name: str = None, data_schema: object = None
+) -> Session:
+    """
+    Get a new db session for (provider, db_name) or (provider, data_schema).
+    Caller is responsible for closing the session when done.
+    Use db_session_scope() for automatic commit/rollback/close.
+
+    :param provider: data provider
+    :param db_name: db name
+    :param data_schema: data schema (used to resolve db_name if db_name is None)
+    :return: new Session instance
+    """
+    session_fac = _get_bound_session_factory(
+        provider=provider, db_name=db_name, data_schema=data_schema
+    )
+    return session_fac()
+
+
+@contextlib.contextmanager
+def db_session_scope(
+    provider: str, db_name: str = None, data_schema: object = None
+) -> Generator[Session, None, None]:
+    """
+    Context manager for db session. Commits on success, rolls back on exception,
+    and always closes the session.
+
+    Usage:
+        with db_session_scope(provider="zvt", data_schema=StockTags) as session:
+            session.query(StockTags).filter(...).all()
+    """
+    session = get_db_session(provider=provider, db_name=db_name, data_schema=data_schema)
+    try:
+        yield session
+        session.commit()
+    except Exception:
+        session.rollback()
+        raise
+    finally:
+        session.close()
 
 
 def get_db_session_factory(provider: str, db_name: str = None, data_schema: object = None):
     """
-    get db session factory from (provider,db_name) or (provider,data_schema)
+    Get bound session factory from (provider, db_name) or (provider, data_schema).
+    Returns sessionmaker; call it to create a new session.
     """
-    if data_schema:
-        db_name = _get_db_name(data_schema=data_schema)
+    return _get_bound_session_factory(
+        provider=provider, db_name=db_name, data_schema=data_schema
+    )
 
-    engine = get_db_engine(provider=provider, db_name=db_name)
-    data_path = zvt_env.get("data_path", ".")
-    storage_id = _route_registry().get_storage_id(provider, db_name)
-    session_fac = _storage_backend().get_session_factory(storage_id, data_path)
-    session_fac.configure(bind=engine)
-    return session_fac
+
+def close_all_sessions() -> None:
+    """
+    Close all sessions stored in zvt_context.sessions.
+    Call before process exit or in tests to release connections.
+    """
+    for key, session in list(zvt_context.sessions.items()):
+        try:
+            session.close()
+        except Exception:
+            logger.exception("Error closing session %s", key)
+        finally:
+            del zvt_context.sessions[key]
 
 
 DBSession = get_db_session_factory
@@ -248,35 +288,23 @@ def del_data(data_schema: Type[Mixin], filters: List = None, provider=None):
     if not provider:
         provider = data_schema.get_providers()[0]
 
-    session = get_db_session(provider=provider, data_schema=data_schema)
-    query = session.query(data_schema)
-    if filters:
-        for f in filters:
-            query = query.filter(f)
-    query.delete()
-    session.commit()
+    with db_session_scope(provider=provider, data_schema=data_schema) as session:
+        query = session.query(data_schema)
+        if filters:
+            for f in filters:
+                query = query.filter(f)
+        query.delete()
 
 
-def get_by_id(data_schema, id: str, provider: str = None, session: Session = None):
+def get_by_id(session: Session, data_schema, id: str):
     """
-    get one record by id from data schema
+    get one record by id from data schema.
 
+    :param session: db session (required; use get_db_session() or db_session_scope())
     :param data_schema: data schema
     :param id: the record id
-    :param provider: data provider
-    :param session: db session
-    :return: the record of the id
     """
     _ensure_schema_providers_loaded()
-    providers = data_schema.get_providers()
-    if not providers:
-        raise ValueError(f"no provider registered for: {data_schema}")
-    if not provider:
-        provider = providers[0]
-
-    if not session:
-        session = get_db_session(provider=provider, data_schema=data_schema)
-
     return session.query(data_schema).get(id)
 
 
@@ -323,7 +351,7 @@ def get_data(
     :param provider:
     :param columns:
     :param col_label: dict with key(column), value(label)
-    :param return_type: df, domain or dict. default is df
+    :param return_type: df, domain or dict. default is df. When "domain", session must be passed.
     :param start_timestamp:
     :param end_timestamp:
     :param filters:
@@ -342,81 +370,89 @@ def get_data(
     if not provider:
         provider = providers[0]
 
-    if not session:
-        session = get_db_session(provider=provider, data_schema=data_schema)
+    def _query(sess):
+        time_col = eval("data_schema.{}".format(time_field))
 
-    time_col = eval("data_schema.{}".format(time_field))
+        if columns:
+            # support str
+            cols = list(columns)
+            for i, col in enumerate(cols):
+                if isinstance(col, str):
+                    cols[i] = eval("data_schema.{}".format(col))
 
-    if columns:
-        # support str
-        for i, col in enumerate(columns):
-            if isinstance(col, str):
-                columns[i] = eval("data_schema.{}".format(col))
+            # make sure get timestamp
+            if time_col not in cols:
+                cols.append(time_col)
 
-        # make sure get timestamp
-        if time_col not in columns:
-            columns.append(time_col)
+            if col_label:
+                cols_ = []
+                for col in cols:
+                    if col.name in col_label:
+                        cols_.append(col.label(col_label.get(col.name)))
+                    else:
+                        cols_.append(col)
+                cols = cols_
 
-        if col_label:
-            columns_ = []
-            for col in columns:
-                if col.name in col_label:
-                    columns_.append(col.label(col_label.get(col.name)))
-                else:
-                    columns_.append(col)
-            columns = columns_
+            query = sess.query(*cols)
+        else:
+            query = sess.query(data_schema)
 
-        query = session.query(*columns)
-    else:
-        query = session.query(data_schema)
+        if entity_id:
+            query = query.filter(data_schema.entity_id == entity_id)
+        if entity_ids:
+            query = query.filter(data_schema.entity_id.in_(entity_ids))
+        if code:
+            query = query.filter(data_schema.code == code)
+        if codes:
+            query = query.filter(data_schema.code.in_(codes))
+        if ids:
+            query = query.filter(data_schema.id.in_(ids))
 
-    if entity_id:
-        query = query.filter(data_schema.entity_id == entity_id)
-    if entity_ids:
-        query = query.filter(data_schema.entity_id.in_(entity_ids))
-    if code:
-        query = query.filter(data_schema.code == code)
-    if codes:
-        query = query.filter(data_schema.code.in_(codes))
-    if ids:
-        query = query.filter(data_schema.id.in_(ids))
+        # we always store different level in different schema,the level param is not useful now
+        if level:
+            try:
+                #: some schema has no level,just ignore it
+                data_schema.level
+                level_val = level.value if type(level) == IntervalLevel else level
+                query = query.filter(data_schema.level == level_val)
+            except Exception:
+                pass
 
-    # we always store different level in different schema,the level param is not useful now
-    if level:
-        try:
-            #: some schema has no level,just ignore it
-            data_schema.level
-            if type(level) == IntervalLevel:
-                level = level.value
-            query = query.filter(data_schema.level == level)
-        except Exception as e:
-            pass
+        query = common_filter(
+            query,
+            data_schema=data_schema,
+            start_timestamp=start_timestamp,
+            end_timestamp=end_timestamp,
+            filters=filters,
+            order=order,
+            limit=limit,
+            distinct=distinct,
+            time_field=time_field,
+        )
 
-    query = common_filter(
-        query,
-        data_schema=data_schema,
-        start_timestamp=start_timestamp,
-        end_timestamp=end_timestamp,
-        filters=filters,
-        order=order,
-        limit=limit,
-        distinct=distinct,
-        time_field=time_field,
-    )
+        if return_type == "df":
+            df = pd.read_sql(query.statement, query.session.bind)
+            if pd_is_not_null(df):
+                if index:
+                    df = index_df(df, index=index, drop=drop_index_col, time_field=time_field)
+            return df
+        elif return_type == "domain":
+            return query.all()
+        elif return_type == "dict":
+            domains = query.all()
+            return [_row2dict(item) for item in domains]
+        elif return_type == "select":
+            return query.selectable
 
-    if return_type == "df":
-        df = pd.read_sql(query.statement, query.session.bind)
-        if pd_is_not_null(df):
-            if index:
-                df = index_df(df, index=index, drop=drop_index_col, time_field=time_field)
-        return df
-    elif return_type == "domain":
-        return query.all()
-    elif return_type == "dict":
-        domains = query.all()
-        return [_row2dict(item) for item in domains]
-    elif return_type == "select":
-        return query.selectable
+    if session is not None:
+        return _query(session)
+    if return_type == "domain":
+        raise ValueError(
+            "session is required when return_type='domain' so returned instances stay bound. "
+            "Use get_db_session() or db_session_scope() and close the session when done."
+        )
+    with db_session_scope(provider=provider, data_schema=data_schema) as sess:
+        return _query(sess)
 
 
 def data_exist(session, schema, id):
@@ -437,31 +473,23 @@ def get_data_count(data_schema, filters=None, provider=None, session=None):
 
     :param data_schema:
     :param filters:
-    :param session:
+    :param session: db session (if None, uses a short-lived scope)
     :return:
     """
-    if not session:
-        session = get_db_session(provider=provider, data_schema=data_schema)
-
-    query = session.query(data_schema)
-    if filters:
-        for filter in filters:
-            query = query.filter(filter)
-
-    count_q = query.statement.with_only_columns(func.count(data_schema.id)).order_by(None)
-    count = session.execute(count_q).scalar()
-    return count
-
-
-def get_group(provider, data_schema, column, group_func=func.count, session=None):
-    if not session:
-        session = get_db_session(provider=provider, data_schema=data_schema)
-    if group_func:
-        query = session.query(column, group_func(column)).group_by(column)
-    else:
-        query = session.query(column).group_by(column)
-    df = pd.read_sql(query.statement, session.bind)
-    return df
+    if session is not None:
+        query = session.query(data_schema)
+        if filters:
+            for filter in filters:
+                query = query.filter(filter)
+        count_q = query.statement.with_only_columns(func.count(data_schema.id)).order_by(None)
+        return session.execute(count_q).scalar()
+    with db_session_scope(provider=provider, data_schema=data_schema) as session:
+        query = session.query(data_schema)
+        if filters:
+            for filter in filters:
+                query = query.filter(filter)
+        count_q = query.statement.with_only_columns(func.count(data_schema.id)).order_by(None)
+        return session.execute(count_q).scalar()
 
 
 def decode_entity_id(entity_id: str):
@@ -564,39 +592,43 @@ def df_to_db(
 
     saved = 0
 
-    if not session:
-        session = get_db_session(provider=provider, data_schema=data_schema)
+    def _do_save(sess):
+        nonlocal saved
+        for step in range(step_size):
+            df_current = df.iloc[sub_size * step : sub_size * (step + 1)]
 
-    for step in range(step_size):
-        df_current = df.iloc[sub_size * step : sub_size * (step + 1)]
+            if need_check:
+                if force_update:
+                    ids = df_current["id"].tolist()
+                    if len(ids) == 1:
+                        sql = text(f'delete from `{data_schema.__tablename__}` where id = "{ids[0]}"')
+                    else:
+                        sql = text(f"delete from `{data_schema.__tablename__}` where id in {tuple(ids)}")
 
-        if need_check:
-            if force_update:
-                ids = df_current["id"].tolist()
-                if len(ids) == 1:
-                    sql = text(f'delete from `{data_schema.__tablename__}` where id = "{ids[0]}"')
+                    sess.execute(sql)
                 else:
-                    sql = text(f"delete from `{data_schema.__tablename__}` where id in {tuple(ids)}")
+                    current = get_data(
+                        session=sess,
+                        data_schema=data_schema,
+                        columns=[data_schema.id],
+                        provider=provider,
+                        ids=df_current["id"].tolist(),
+                    )
+                    if pd_is_not_null(current):
+                        df_current = df_current[~df_current["id"].isin(current["id"])]
 
-                session.execute(sql)
-            else:
-                current = get_data(
-                    session=session,
-                    data_schema=data_schema,
-                    columns=[data_schema.id],
-                    provider=provider,
-                    ids=df_current["id"].tolist(),
+            if pd_is_not_null(df_current):
+                saved = saved + len(df_current)
+                df_current.to_sql(
+                    data_schema.__tablename__, sess.connection(), index=False, if_exists="append", dtype=dtype
                 )
-                if pd_is_not_null(current):
-                    df_current = df_current[~df_current["id"].isin(current["id"])]
+            sess.commit()
+        return saved
 
-        if pd_is_not_null(df_current):
-            saved = saved + len(df_current)
-            df_current.to_sql(
-                data_schema.__tablename__, session.connection(), index=False, if_exists="append", dtype=dtype
-            )
-        session.commit()
-    return saved
+    if session is not None:
+        return _do_save(session)
+    with db_session_scope(provider=provider, data_schema=data_schema) as sess:
+        return _do_save(sess)
 
 
 def get_entities(
@@ -727,6 +759,8 @@ __all__ = [
     "get_schemas",
     "get_db_session",
     "get_db_session_factory",
+    "db_session_scope",
+    "close_all_sessions",
     "get_entity_schema",
     "get_schema_by_name",
     "get_schema_columns",
@@ -736,7 +770,6 @@ __all__ = [
     "get_data",
     "data_exist",
     "get_data_count",
-    "get_group",
     "decode_entity_id",
     "get_entity_type",
     "get_entity_exchange",

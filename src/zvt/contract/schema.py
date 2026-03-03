@@ -22,12 +22,15 @@ def _get_schema_providers() -> Dict[str, List[str]]:
         pass
     try:
         from zvt import zvt_config
+
         user = (zvt_config.get("storage") or {}).get("schema_providers") or {}
         default = dict(default)
         default.update(user)
     except Exception:
         pass
     return default
+
+
 from zvt.utils.time_utils import date_and_time, is_same_date_time, now_pd_timestamp
 
 
@@ -116,12 +119,10 @@ class Mixin(object):
                     assert item[0][k] == data[k]
 
     @classmethod
-    def get_by_id(cls, id, provider_index: int = 0, provider: str = None):
+    def get_by_id(cls, session, id):
         from .api import get_by_id
 
-        if not provider:
-            provider = cls.get_providers()[provider_index]
-        return get_by_id(data_schema=cls, id=id, provider=provider)
+        return get_by_id(session=session, data_schema=cls, id=id)
 
     @classmethod
     def query_data(

@@ -34,8 +34,8 @@ bot = QiyeWechatBot()
 
 
 def report_limit_up():
-    latest_data = LimitUpInfo.query_data(order=LimitUpInfo.timestamp.desc(), limit=1, return_type="domain")
-    timestamp = latest_data[0].timestamp
+    latest_data = LimitUpInfo.query_data(order=LimitUpInfo.timestamp.desc(), limit=1, return_type="dict")
+    timestamp = latest_data[0]["timestamp"]
     df = LimitUpInfo.query_data(start_timestamp=timestamp, end_timestamp=timestamp, columns=["code", "name", "reason"])
     df["reason"] = df["reason"].str.split("+")
     print(df)

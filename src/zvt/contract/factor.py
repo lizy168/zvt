@@ -319,10 +319,10 @@ class Factor(DataReader, EntityStateService, DataListener):
                         order=self.factor_schema.timestamp.desc(),
                         limit=1,
                         index=[self.category_field, self.time_field],
-                        return_type="domain",
+                        return_type="dict",
                     )
                     if latest_laved:
-                        df1 = df[df.timestamp < latest_laved[0].timestamp].iloc[-self.computing_window :]
+                        df1 = df[df.timestamp < latest_laved[0]["timestamp"]].iloc[-self.computing_window :]
                         if pd_is_not_null(df1):
                             df = df[df.timestamp >= df1.iloc[0].timestamp]
                     dfs.append(df)

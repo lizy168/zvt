@@ -61,8 +61,8 @@ def _stock_tags_need_update(stock_tags: StockTags, set_stock_tags_model: SetStoc
 
 def get_stock_tag_options(entity_id: str) -> StockTagOptions:
     with contract_api.DBSession(provider="zvt", data_schema=StockTags)() as session:
-        datas: List[StockTags] = StockTags.query_data(
-            entity_id=entity_id, order=StockTags.timestamp.desc(), limit=1, return_type="domain", session=session
+        datas: List[dict] = StockTags.query_data(
+            entity_id=entity_id, order=StockTags.timestamp.desc(), limit=1, return_type="dict", session=session
         )
         main_tag_options = []
         sub_tag_options = []
@@ -74,54 +74,60 @@ def get_stock_tag_options(entity_id: str) -> StockTagOptions:
         stock_tags = None
         if datas:
             stock_tags = datas[0]
-            main_tag = stock_tags.main_tag
-            sub_tag = stock_tags.sub_tag
+            main_tag = stock_tags.get("main_tag")
+            sub_tag = stock_tags.get("sub_tag")
 
-            if stock_tags.main_tags:
+            main_tags = stock_tags.get("main_tags")
+            if main_tags:
                 main_tag_options = [
                     CreateTagInfoModel(tag=tag, tag_reason=tag_reason)
-                    for tag, tag_reason in stock_tags.main_tags.items()
+                    for tag, tag_reason in main_tags.items()
                 ]
 
-            if stock_tags.sub_tags:
+            sub_tags = stock_tags.get("sub_tags")
+            if sub_tags:
                 sub_tag_options = [
                     CreateTagInfoModel(tag=tag, tag_reason=tag_reason)
-                    for tag, tag_reason in stock_tags.sub_tags.items()
+                    for tag, tag_reason in sub_tags.items()
                 ]
 
-            if stock_tags.active_hidden_tags:
-                active_hidden_tags = stock_tags.active_hidden_tags
+            if stock_tags.get("active_hidden_tags"):
+                active_hidden_tags = stock_tags["active_hidden_tags"]
 
-            if stock_tags.hidden_tags:
+            hidden_tags = stock_tags.get("hidden_tags")
+            if hidden_tags:
                 hidden_tag_options = [
                     CreateTagInfoModel(tag=tag, tag_reason=tag_reason)
-                    for tag, tag_reason in stock_tags.hidden_tags.items()
+                    for tag, tag_reason in hidden_tags.items()
                 ]
 
-        main_tags_info: List[MainTagInfo] = MainTagInfo.query_data(session=session, return_type="domain")
-        if not main_tag:
-            main_tag = main_tags_info[0].tag
+        main_tags_info: List[dict] = MainTagInfo.query_data(session=session, return_type="dict")
+        if not main_tag and main_tags_info:
+            main_tag = main_tags_info[0]["tag"]
 
+        main_tags_set = (stock_tags or {}).get("main_tags") or {}
         main_tag_options = main_tag_options + [
-            CreateTagInfoModel(tag=item.tag, tag_reason=item.tag_reason)
+            CreateTagInfoModel(tag=item["tag"], tag_reason=item["tag_reason"])
             for item in main_tags_info
-            if not stock_tags or (not stock_tags.main_tags) or (item.tag not in stock_tags.main_tags)
+            if item["tag"] not in main_tags_set
         ]
 
-        sub_tags_info: List[SubTagInfo] = SubTagInfo.query_data(session=session, return_type="domain")
-        if not sub_tag:
-            sub_tag = sub_tags_info[0].tag
+        sub_tags_info: List[dict] = SubTagInfo.query_data(session=session, return_type="dict")
+        if not sub_tag and sub_tags_info:
+            sub_tag = sub_tags_info[0]["tag"]
+        sub_tags_set = (stock_tags or {}).get("sub_tags") or {}
         sub_tag_options = sub_tag_options + [
-            CreateTagInfoModel(tag=item.tag, tag_reason=item.tag_reason)
+            CreateTagInfoModel(tag=item["tag"], tag_reason=item["tag_reason"])
             for item in sub_tags_info
-            if not stock_tags or (not stock_tags.sub_tags) or (item.tag not in stock_tags.sub_tags)
+            if item["tag"] not in sub_tags_set
         ]
 
-        hidden_tags_info: List[HiddenTagInfo] = HiddenTagInfo.query_data(session=session, return_type="domain")
+        hidden_tags_info: List[dict] = HiddenTagInfo.query_data(session=session, return_type="dict")
+        hidden_tags_set = (stock_tags or {}).get("hidden_tags") or {}
         hidden_tag_options = hidden_tag_options + [
-            CreateTagInfoModel(tag=item.tag, tag_reason=item.tag_reason)
+            CreateTagInfoModel(tag=item["tag"], tag_reason=item["tag_reason"])
             for item in hidden_tags_info
-            if not stock_tags or (not stock_tags.hidden_tags) or (item.tag not in stock_tags.hidden_tags)
+            if item["tag"] not in hidden_tags_set
         ]
 
         return StockTagOptions(
@@ -359,20 +365,20 @@ def build_default_main_tag(entity_type="stock", entity_ids=None, force_rebuild=F
         block_stocks: List[BlockStock] = BlockStock.query_data(
             provider="em",
             filters=[BlockStock.code.in_(industry_codes), BlockStock.stock_id.in_(entity_ids)],
-            return_type="domain",
+            return_type="dict",
         )
-        entity_industry_mapping = {block_stock.stock_id: block_stock.name for block_stock in block_stocks}
+        entity_industry_mapping = {block_stock['stock_id']: block_stock['name'] for block_stock in block_stocks}
     elif entity_type == "stockus":
-        datas: List[Stockus] = Stockus.query_data(entity_ids=entity_ids, return_type="domain")
-        entity_industry_mapping = {item.entity_id: item.industry for item in datas}
+        datas: List[Stockus] = Stockus.query_data(entity_ids=entity_ids, return_type="dict")
+        entity_industry_mapping = {item['entity_id']: item['industry'] for item in datas}
     elif entity_type == "stockhk":
-        datas: List[Stockhk] = Stockhk.query_data(entity_ids=entity_ids, return_type="domain")
-        entity_industry_mapping = {item.entity_id: item.industry for item in datas}
+        datas: List[Stockhk] = Stockhk.query_data(entity_ids=entity_ids, return_type="dict")
+        entity_industry_mapping = {item['entity_id']: item['industry'] for item in datas}
     else:
         raise ValueError(f"Unsupported entity_type: {entity_type}")
 
     for entity_id in entity_ids:
-        stock_tags: List[StockTags] = StockTags.query_data(entity_id=entity_id, return_type="domain")
+        stock_tags: List[StockTags] = StockTags.query_data(entity_id=entity_id, return_type="dict")
         if not force_rebuild and stock_tags:
             logger.info(f"{entity_id} main tag has been set.")
             continue
@@ -410,46 +416,47 @@ def build_default_sub_tags(entity_ids=None):
 
     for entity_id in entity_ids:
         logger.info(f"build sub tag for: {entity_id}")
-        datas = StockTags.query_data(entity_id=entity_id, limit=1, return_type="domain")
+        datas: List[dict] = StockTags.query_data(entity_id=entity_id, limit=1, return_type="dict")
         if not datas:
             raise AssertionError(f"Main tag must be set at first for {entity_id}")
 
-        current_stock_tags: StockTags = datas[0]
+        current_stock_tags = datas[0]
         keep_current = False
-        if current_stock_tags.set_by_user:
+        if current_stock_tags.get("set_by_user"):
             logger.info(f"keep current tags set by user for: {entity_id}")
             keep_current = True
 
-        current_sub_tag = current_stock_tags.sub_tag
+        current_sub_tag = current_stock_tags.get("sub_tag")
         filters = [BlockStock.stock_id == entity_id]
+        sub_tags = current_stock_tags.get("sub_tags") or {}
         if current_sub_tag:
             logger.info(f"{entity_id} current_sub_tag: {current_sub_tag}")
-            current_sub_tags = current_stock_tags.sub_tags.keys()
+            current_sub_tags = list(sub_tags.keys())
             filters = filters + [BlockStock.name.notin_(current_sub_tags)]
 
         df_block = Block.query_data(provider="em", filters=[Block.category == "concept"])
         concept_codes = df_block["code"].tolist()
         filters = filters + [BlockStock.code.in_(concept_codes)]
 
-        block_stocks: List[BlockStock] = BlockStock.query_data(
+        block_stocks: List[dict] = BlockStock.query_data(
             provider="em",
             filters=filters,
-            return_type="domain",
+            return_type="dict",
         )
         if not block_stocks:
             logger.info(f"no block_stocks for: {entity_id}")
             continue
 
         for block_stock in block_stocks:
-            sub_tag = block_stock.name
+            sub_tag = block_stock["name"]
             if sub_tag in get_sub_tags():
                 sub_tag_reason = f"来自概念:{sub_tag}"
 
                 main_tag = get_main_tag_by_sub_tag(sub_tag)
                 main_tag_reason = sub_tag_reason
-                if (main_tag == "其他" or not main_tag) and current_stock_tags.main_tag:
-                    main_tag = current_stock_tags.main_tag
-                    main_tag_reason = current_stock_tags.main_tag_reason
+                if (main_tag == "其他" or not main_tag) and current_stock_tags.get("main_tag"):
+                    main_tag = current_stock_tags["main_tag"]
+                    main_tag_reason = current_stock_tags.get("main_tag_reason") or main_tag_reason
 
                 build_stock_tags(
                     set_stock_tags_model=SetStockTagsModel(
@@ -458,7 +465,7 @@ def build_default_sub_tags(entity_ids=None):
                         main_tag_reason=main_tag_reason,
                         sub_tag=sub_tag,
                         sub_tag_reason=sub_tag_reason,
-                        active_hidden_tags=current_stock_tags.active_hidden_tags,
+                        active_hidden_tags=current_stock_tags.get("active_hidden_tags"),
                     ),
                     timestamp=now_pd_timestamp(),
                     set_by_user=False,
@@ -485,11 +492,9 @@ def is_tag_info_existed(tag: str, tag_type: TagType):
     data_schema = get_tag_info_schema(tag_type=tag_type)
     with contract_api.DBSession(provider="zvt", data_schema=data_schema)() as session:
         current_tags_info = data_schema.query_data(
-            session=session, filters=[data_schema.tag == tag], return_type="domain"
+            session=session, filters=[data_schema.tag == tag], return_type="dict"
         )
-        if current_tags_info:
-            return True
-        return False
+        return bool(current_tags_info)
 
 
 def create_tag_info(tag_info: CreateTagInfoModel, tag_type: TagType):
@@ -573,7 +578,7 @@ def build_stock_pool(create_stock_pools_model: CreateStockPoolsModel, target_dat
 
 def delete_stock_pool(stock_pool_name: str):
     with contract_api.DBSession(provider="zvt", data_schema=StockPoolInfo)() as session:
-        stock_pool_info = StockPoolInfo.query_data(
+        stock_pool_info: List = StockPoolInfo.query_data(
             session=session,
             filters=[StockPoolInfo.stock_pool_name == stock_pool_name],
             return_type="domain",
@@ -590,27 +595,27 @@ def delete_stock_pool(stock_pool_name: str):
 
 def get_main_tags_in_stock_pool(stock_pool_name: str) -> List[str]:
     with contract_api.DBSession(provider="zvt", data_schema=StockPools)() as session:
-        stock_pool_info = StockPoolInfo.query_data(
+        stock_pool_info: List[dict] = StockPoolInfo.query_data(
             session=session,
             filters=[StockPoolInfo.stock_pool_name == stock_pool_name],
-            return_type="domain",
+            return_type="dict",
         )
         if not stock_pool_info:
             raise HTTPException(status_code=404, detail=f"Stock pool info {stock_pool_name} not found")
 
         entity_ids = None
         if stock_pool_name != "all":
-            stock_pools: List[StockPools] = StockPools.query_data(
+            stock_pools: List[dict] = StockPools.query_data(
                 session=session,
                 filters=[StockPools.stock_pool_name == stock_pool_name],
                 order=StockPools.timestamp.desc(),
                 limit=1,
-                return_type="domain",
+                return_type="dict",
             )
             if not stock_pools:
                 raise HTTPException(status_code=404, detail=f"Stock pool {stock_pool_name} not found")
 
-            entity_ids = stock_pools[0].entity_ids
+            entity_ids = stock_pools[0].get("entity_ids")
             if not entity_ids:
                 return []
 
@@ -627,17 +632,17 @@ def get_main_tags_in_stock_pool(stock_pool_name: str) -> List[str]:
 
 def query_stock_tag_stats(query_stock_tag_stats_model: QueryStockTagStatsModel):
     with contract_api.DBSession(provider="zvt", data_schema=TagStats)() as session:
-        datas = TagStats.query_data(
+        datas: List[dict] = TagStats.query_data(
             session=session,
             filters=[TagStats.stock_pool_name == query_stock_tag_stats_model.stock_pool_name],
             order=TagStats.timestamp.desc(),
             limit=1,
-            return_type="domain",
+            return_type="dict",
         )
         if not datas:
             return []
 
-        target_date = datas[0].timestamp
+        target_date = datas[0]["timestamp"]
 
         tag_stats_list: List[dict] = TagStats.query_data(
             session=session,
@@ -654,9 +659,9 @@ def query_stock_tag_stats(query_stock_tag_stats_model: QueryStockTagStatsModel):
 
         entity_ids = flatten_list([tag_stats["entity_ids"] for tag_stats in tag_stats_list])
 
-        # get stocks meta
-        stocks = Stock.query_data(provider="em", entity_ids=entity_ids, return_type="domain")
-        entity_map = {item.entity_id: item for item in stocks}
+        # get stocks meta (dict to avoid session/domain lifecycle)
+        stocks: List[dict] = Stock.query_data(provider="em", entity_ids=entity_ids, return_type="dict")
+        entity_map = {item["entity_id"]: item for item in stocks}
 
         # get stock tags
         tags_dict = StockTags.query_data(
@@ -677,11 +682,12 @@ def query_stock_tag_stats(query_stock_tag_stats_model: QueryStockTagStatsModel):
         for tag_stats in tag_stats_list:
             stock_details = []
             for entity_id in tag_stats["entity_ids"]:
+                stock_meta = entity_map.get(entity_id) or {}
                 stock_details_model = {
                     "entity_id": entity_id,
                     "main_tag": tag_stats["main_tag"],
-                    "code": entity_map.get(entity_id).code,
-                    "name": entity_map.get(entity_id).name,
+                    "code": stock_meta.get("code"),
+                    "name": stock_meta.get("name"),
                 }
 
                 stock_tags = entity_tags_map.get(entity_id)
@@ -761,9 +767,9 @@ def activate_industry_list(industry_list: List[str]):
     block_stocks: List[BlockStock] = BlockStock.query_data(
         provider="em",
         filters=[BlockStock.code.in_(industry_codes)],
-        return_type="domain",
+        return_type="dict",
     )
-    entity_ids = [block_stock.stock_id for block_stock in block_stocks]
+    entity_ids = [block_stock['stock_id'] for block_stock in block_stocks]
 
     if not entity_ids:
         logger.info(f"No stocks in {industry_list}")

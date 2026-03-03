@@ -116,14 +116,14 @@ def compute_top_stocks(start_date, entity_type="stock", provider="em", force_upd
             TopStocks.entity_type == entity_type
         ).delete()
     else:
-        latest = TopStocks.query_data(
+        latest: List[dict] = TopStocks.query_data(
             limit=1,
             filters=[TopStocks.entity_type == entity_type],
             order=TopStocks.timestamp.desc(),
-            return_type="domain",
+            return_type="dict",
         )
         if latest:
-            start_date = next_date(the_time=to_date_time_str(latest[0].timestamp, fmt=TIME_FORMAT_DAY))
+            start_date = next_date(the_time=to_date_time_str(latest[0]["timestamp"], fmt=TIME_FORMAT_DAY))
 
     trade_days = get_trade_dates(entity_type=entity_type, start=start_date)
 
@@ -215,29 +215,29 @@ def compute_top_stocks(start_date, entity_type="stock", provider="em", force_upd
 
 
 def get_top_stocks(target_date, entity_type="stock", return_type="short"):
-    datas: List[TopStocks] = TopStocks.query_data(
+    datas: List[dict] = TopStocks.query_data(
         filters=[TopStocks.entity_type == entity_type, TopStocks.timestamp == to_pd_timestamp(target_date)],
-        return_type="domain",
+        return_type="dict",
     )
     stocks = []
     if datas:
         assert len(datas) == 1
         top_stock = datas[0]
         if return_type == "all":
-            short_stocks = json.loads(top_stock.short_stocks) if top_stock.short_stocks else []
-            long_stocks = json.loads(top_stock.long_stocks) if top_stock.long_stocks else []
-            small_vol_up_stocks = json.loads(top_stock.small_vol_up_stocks) if top_stock.small_vol_up_stocks else []
-            big_vol_up_stocks = json.loads(top_stock.big_vol_up_stocks) if top_stock.big_vol_up_stocks else []
+            short_stocks = json.loads(top_stock["short_stocks"]) if top_stock.get("short_stocks") else []
+            long_stocks = json.loads(top_stock["long_stocks"]) if top_stock.get("long_stocks") else []
+            small_vol_up_stocks = json.loads(top_stock["small_vol_up_stocks"]) if top_stock.get("small_vol_up_stocks") else []
+            big_vol_up_stocks = json.loads(top_stock["big_vol_up_stocks"]) if top_stock.get("big_vol_up_stocks") else []
             all_stocks = list(set(short_stocks + long_stocks + small_vol_up_stocks + big_vol_up_stocks))
             return all_stocks
         elif return_type == "short":
-            stocks = json.loads(top_stock.short_stocks) if top_stock.short_stocks else []
+            stocks = json.loads(top_stock["short_stocks"]) if top_stock.get("short_stocks") else []
         elif return_type == "long":
-            stocks = json.loads(top_stock.long_stocks) if top_stock.long_stocks else []
+            stocks = json.loads(top_stock["long_stocks"]) if top_stock.get("long_stocks") else []
         elif return_type == "small_vol_up":
-            stocks = json.loads(top_stock.small_vol_up_stocks) if top_stock.small_vol_up_stocks else []
+            stocks = json.loads(top_stock["small_vol_up_stocks"]) if top_stock.get("small_vol_up_stocks") else []
         elif return_type == "big_vol_up":
-            stocks = json.loads(top_stock.big_vol_up_stocks) if top_stock.big_vol_up_stocks else []
+            stocks = json.loads(top_stock["big_vol_up_stocks"]) if top_stock.get("big_vol_up_stocks") else []
         else:
             assert False
     return stocks

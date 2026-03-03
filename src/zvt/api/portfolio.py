@@ -32,13 +32,13 @@ def get_portfolio_stocks(
 ):
     portfolio_stock = f"{portfolio_entity.__name__}Stock"
     data_schema: PortfolioStockHistory = get_schema_by_name(portfolio_stock)
-    latests: List[PortfolioStockHistory] = data_schema.query_data(
+    latests: List[dict] = data_schema.query_data(
         provider=provider,
         code=code,
         end_timestamp=timestamp,
         order=data_schema.timestamp.desc(),
         limit=1,
-        return_type="domain",
+        return_type="dict",
     )
     if latests:
         latest_record = latests[0]
@@ -49,16 +49,16 @@ def get_portfolio_stocks(
             codes=codes,
             ids=ids,
             end_timestamp=timestamp,
-            filters=[data_schema.report_date == latest_record.report_date],
+            filters=[data_schema.report_date == latest_record["report_date"]],
         )
         # 最新的为年报或者半年报
-        if latest_record.report_period == ReportPeriod.year or latest_record.report_period == ReportPeriod.half_year:
+        if latest_record["report_period"] == ReportPeriod.year or latest_record["report_period"] == ReportPeriod.half_year:
             return df
         # 季报，需要结合 年报或半年报 来算持仓
         else:
             step = 0
             while step <= 20:
-                report_date = get_recent_report_date(latest_record.report_date, step=step)
+                report_date = get_recent_report_date(latest_record["report_date"], step=step)
 
                 pre_df = data_schema.query_data(
                     provider=provider,
