@@ -58,7 +58,7 @@ def create_stock_pool_info(create_stock_pool_info_model: CreateStockPoolInfoMode
 
 @work_router.get("/get_stock_pool_info", response_model=List[StockPoolInfoModel])
 def get_stock_pool_info():
-    with contract_api.DBSession(provider="zvt", data_schema=StockPoolInfo)() as session:
+    with contract_api.db_session_scope(provider="zvt", data_schema=StockPoolInfo) as session:
         stock_pool_info: List[dict] = StockPoolInfo.query_data(session=session, return_type="dict")
         return [StockPoolInfoModel(**item) for item in stock_pool_info]
 
@@ -75,7 +75,7 @@ def delete_stock_pool(stock_pool_name: str):
 
 @work_router.get("/get_stock_pools", response_model=Optional[StockPoolsModel])
 def get_stock_pools(stock_pool_name: str):
-    with contract_api.DBSession(provider="zvt", data_schema=StockPools)() as session:
+    with contract_api.db_session_scope(provider="zvt", data_schema=StockPools) as session:
         stock_pools: List[dict] = StockPools.query_data(
             session=session,
             filters=[StockPools.stock_pool_name == stock_pool_name],
@@ -93,7 +93,7 @@ def get_main_tag_info():
     """
     Get main_tag info
     """
-    with contract_api.DBSession(provider="zvt", data_schema=MainTagInfo)() as session:
+    with contract_api.db_session_scope(provider="zvt", data_schema=MainTagInfo) as session:
         tags_info: List[dict] = MainTagInfo.query_data(session=session, return_type="dict")
         return [TagInfoModel(**item) for item in tags_info]
 
@@ -103,7 +103,7 @@ def get_sub_tag_info():
     """
     Get sub_tag info
     """
-    with contract_api.DBSession(provider="zvt", data_schema=SubTagInfo)() as session:
+    with contract_api.db_session_scope(provider="zvt", data_schema=SubTagInfo) as session:
         tags_info: List[dict] = SubTagInfo.query_data(session=session, return_type="dict")
         return [TagInfoModel(**item) for item in tags_info]
 
@@ -118,7 +118,7 @@ def get_industry_info():
     """
     Get industry info
     """
-    with contract_api.DBSession(provider="zvt", data_schema=IndustryInfo)() as session:
+    with contract_api.db_session_scope(provider="zvt", data_schema=IndustryInfo) as session:
         industry_info: List[dict] = IndustryInfo.query_data(session=session, return_type="dict")
         return [IndustryInfoModel(**item) for item in industry_info]
 
@@ -133,7 +133,7 @@ def get_hidden_tag_info():
     """
     Get hidden_tag info
     """
-    with contract_api.DBSession(provider="zvt", data_schema=MainTagInfo)() as session:
+    with contract_api.db_session_scope(provider="zvt", data_schema=MainTagInfo) as session:
         tags_info: List[dict] = HiddenTagInfo.query_data(session=session, return_type="dict")
         return [TagInfoModel(**item) for item in tags_info]
 
@@ -178,7 +178,7 @@ def query_stock_tags(query_stock_tags_model: QueryStockTagsModel):
     """
     filters = [StockTags.entity_id.in_(query_stock_tags_model.entity_ids)]
 
-    with contract_api.DBSession(provider="zvt", data_schema=StockTags)() as session:
+    with contract_api.db_session_scope(provider="zvt", data_schema=StockTags) as session:
         tags: List[dict] = StockTags.query_data(
             session=session, filters=filters, return_type="dict", order=StockTags.timestamp.desc()
         )
@@ -196,7 +196,7 @@ def query_simple_stock_tags(query_simple_stock_tags_model: QuerySimpleStockTagsM
     entity_ids = query_simple_stock_tags_model.entity_ids
 
     filters = [StockTags.entity_id.in_(entity_ids)]
-    with contract_api.DBSession(provider="zvt", data_schema=StockTags)() as session:
+    with contract_api.db_session_scope(provider="zvt", data_schema=StockTags) as session:
         tags: List[dict] = StockTags.query_data(
             session=session, filters=filters, return_type="dict", order=StockTags.timestamp.desc()
         )

@@ -50,7 +50,7 @@ def set_stock_news_tag_suggestions(stock_news, tag_suggestions, session):
 
 
 def build_tag_suggestions(entity_id):
-    with contract_api.DBSession(provider="em", data_schema=StockNews)() as session:
+    with contract_api.db_session_scope(provider="em", data_schema=StockNews) as session:
         start_date = date_time_by_interval(current_date(), -30)
         datas: List[dict] = StockNews.query_data(
             entity_id=entity_id,
@@ -149,7 +149,7 @@ def extract_info(tag_dict):
 
 
 def build_tag_suggestions_stats():
-    with contract_api.DBSession(provider="em", data_schema=StockNews)() as session:
+    with contract_api.db_session_scope(provider="em", data_schema=StockNews) as session:
         start_date = date_time_by_interval(current_date(), -10)
         stock_news_list: List[StockNews] = StockNews.query_data(
             session=session,

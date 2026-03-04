@@ -60,7 +60,7 @@ def _stock_tags_need_update(stock_tags: StockTags, set_stock_tags_model: SetStoc
 
 
 def get_stock_tag_options(entity_id: str) -> StockTagOptions:
-    with contract_api.DBSession(provider="zvt", data_schema=StockTags)() as session:
+    with contract_api.db_session_scope(provider="zvt", data_schema=StockTags) as session:
         datas: List[dict] = StockTags.query_data(
             entity_id=entity_id, order=StockTags.timestamp.desc(), limit=1, return_type="dict", session=session
         )
@@ -164,7 +164,7 @@ def build_stock_tags(
             if not is_tag_info_existed(tag=hidden_tag_info.tag, tag_type=TagType.hidden_tag):
                 create_tag_info(tag_info=hidden_tag_info, tag_type=TagType.hidden_tag)
 
-    with contract_api.DBSession(provider="zvt", data_schema=StockTags)() as session:
+    with contract_api.db_session_scope(provider="zvt", data_schema=StockTags) as session:
         entity_id = set_stock_tags_model.entity_id
         main_tags = {}
         sub_tags = {}
@@ -287,7 +287,7 @@ def batch_set_stock_tags(batch_set_stock_tags_model: BatchSetStockTagsModel):
     if not is_tag_info_existed(tag=tag_info.tag, tag_type=batch_set_stock_tags_model.tag_type):
         create_tag_info(tag_info=tag_info, tag_type=batch_set_stock_tags_model.tag_type)
 
-    with contract_api.DBSession(provider="zvt", data_schema=StockTags)() as session:
+    with contract_api.db_session_scope(provider="zvt", data_schema=StockTags) as session:
         tag_type = batch_set_stock_tags_model.tag_type
         if tag_type == TagType.main_tag:
             main_tag = batch_set_stock_tags_model.tag
@@ -490,7 +490,7 @@ def get_tag_info_schema(tag_type: TagType):
 
 def is_tag_info_existed(tag: str, tag_type: TagType):
     data_schema = get_tag_info_schema(tag_type=tag_type)
-    with contract_api.DBSession(provider="zvt", data_schema=data_schema)() as session:
+    with contract_api.db_session_scope(provider="zvt", data_schema=data_schema) as session:
         current_tags_info = data_schema.query_data(
             session=session, filters=[data_schema.tag == tag], return_type="dict"
         )
@@ -505,7 +505,7 @@ def create_tag_info(tag_info: CreateTagInfoModel, tag_type: TagType):
         raise HTTPException(status_code=409, detail=f"This tag has been registered in {tag_type}")
 
     data_schema = get_tag_info_schema(tag_type=tag_type)
-    with contract_api.DBSession(provider="zvt", data_schema=data_schema)() as session:
+    with contract_api.db_session_scope(provider="zvt", data_schema=data_schema) as session:
         timestamp = current_date()
         entity_id = "admin"
         tag_info_db = data_schema(
@@ -522,7 +522,7 @@ def create_tag_info(tag_info: CreateTagInfoModel, tag_type: TagType):
 
 
 def build_stock_pool_info(create_stock_pool_info_model: CreateStockPoolInfoModel, timestamp):
-    with contract_api.DBSession(provider="zvt", data_schema=StockPoolInfo)() as session:
+    with contract_api.db_session_scope(provider="zvt", data_schema=StockPoolInfo) as session:
         stock_pool_info = StockPoolInfo(
             entity_id="admin",
             timestamp=to_pd_timestamp(timestamp),
@@ -537,7 +537,7 @@ def build_stock_pool_info(create_stock_pool_info_model: CreateStockPoolInfoModel
 
 
 def build_stock_pool(create_stock_pools_model: CreateStockPoolsModel, target_date=current_date()):
-    with contract_api.DBSession(provider="zvt", data_schema=StockPools)() as session:
+    with contract_api.db_session_scope(provider="zvt", data_schema=StockPools) as session:
         entity_type = create_stock_pools_model.entity_type
         stock_pool_name = create_stock_pools_model.stock_pool_name
 
@@ -577,7 +577,7 @@ def build_stock_pool(create_stock_pools_model: CreateStockPoolsModel, target_dat
 
 
 def delete_stock_pool(stock_pool_name: str):
-    with contract_api.DBSession(provider="zvt", data_schema=StockPoolInfo)() as session:
+    with contract_api.db_session_scope(provider="zvt", data_schema=StockPoolInfo) as session:
         stock_pool_info: List = StockPoolInfo.query_data(
             session=session,
             filters=[StockPoolInfo.stock_pool_name == stock_pool_name],
@@ -594,7 +594,7 @@ def delete_stock_pool(stock_pool_name: str):
 
 
 def get_main_tags_in_stock_pool(stock_pool_name: str) -> List[str]:
-    with contract_api.DBSession(provider="zvt", data_schema=StockPools)() as session:
+    with contract_api.db_session_scope(provider="zvt", data_schema=StockPools) as session:
         stock_pool_info: List[dict] = StockPoolInfo.query_data(
             session=session,
             filters=[StockPoolInfo.stock_pool_name == stock_pool_name],
@@ -631,7 +631,7 @@ def get_main_tags_in_stock_pool(stock_pool_name: str) -> List[str]:
 
 
 def query_stock_tag_stats(query_stock_tag_stats_model: QueryStockTagStatsModel):
-    with contract_api.DBSession(provider="zvt", data_schema=TagStats)() as session:
+    with contract_api.db_session_scope(provider="zvt", data_schema=TagStats) as session:
         datas: List[dict] = TagStats.query_data(
             session=session,
             filters=[TagStats.stock_pool_name == query_stock_tag_stats_model.stock_pool_name],
@@ -739,7 +739,7 @@ def refresh_main_tag_by_sub_tag(stock_tag: StockTags, set_by_user=False) -> Stoc
 
 
 def refresh_all_main_tag_by_sub_tag():
-    with contract_api.DBSession(provider="zvt", data_schema=StockTags)() as session:
+    with contract_api.db_session_scope(provider="zvt", data_schema=StockTags) as session:
         stock_tags = StockTags.query_data(
             session=session,
             return_type="domain",
@@ -780,7 +780,7 @@ def activate_industry_list(industry_list: List[str]):
 
 def activate_sub_tags(activate_sub_tags_model: ActivateSubTagsModel):
     sub_tags = activate_sub_tags_model.sub_tags
-    with contract_api.DBSession(provider="zvt", data_schema=StockTags)() as session:
+    with contract_api.db_session_scope(provider="zvt", data_schema=StockTags) as session:
         result = {}
         for sub_tag in sub_tags:
             # df = StockTags.query_data(
@@ -812,7 +812,7 @@ def activate_sub_tags(activate_sub_tags_model: ActivateSubTagsModel):
 
 
 def delete_main_tag(main_tag: str):
-    with contract_api.DBSession(provider="zvt", data_schema=StockTags)() as session:
+    with contract_api.db_session_scope(provider="zvt", data_schema=StockTags) as session:
         stock_tags = StockTags.query_data(
             session=session,
             # 需要sqlite3版本>=3.37.0
@@ -855,7 +855,7 @@ def delete_main_tag(main_tag: str):
 
 
 def delete_sub_tag(sub_tag: str):
-    with contract_api.DBSession(provider="zvt", data_schema=StockTags)() as session:
+    with contract_api.db_session_scope(provider="zvt", data_schema=StockTags) as session:
         stock_tags = StockTags.query_data(
             session=session,
             # 需要sqlite3版本>=3.37.0
@@ -890,7 +890,7 @@ def delete_sub_tag(sub_tag: str):
 
 
 def delete_hidden_tag(hidden_tag: str):
-    with contract_api.DBSession(provider="zvt", data_schema=StockTags)() as session:
+    with contract_api.db_session_scope(provider="zvt", data_schema=StockTags) as session:
         stock_tags = StockTags.query_data(
             session=session,
             # 需要sqlite3版本>=3.37.0
@@ -921,7 +921,7 @@ def delete_hidden_tag(hidden_tag: str):
 
 def delete_tag(tag: str, tag_type: TagType):
     data_schema = get_tag_info_schema(tag_type=tag_type)
-    with contract_api.DBSession(provider="zvt", data_schema=data_schema)() as session:
+    with contract_api.db_session_scope(provider="zvt", data_schema=data_schema) as session:
         current_tags_info = data_schema.query_data(
             session=session, filters=[data_schema.tag == tag], return_type="domain"
         )
@@ -950,7 +950,7 @@ def _create_main_tag_if_not_existed(main_tag, main_tag_reason):
 
 
 def get_main_tag_industry_relation(main_tag):
-    with contract_api.DBSession(provider="zvt", data_schema=StockTags)() as session:
+    with contract_api.db_session_scope(provider="zvt", data_schema=StockTags) as session:
         df = IndustryInfo.query_data(
             session=session,
             columns=[IndustryInfo.industry_name],
@@ -961,7 +961,7 @@ def get_main_tag_industry_relation(main_tag):
 
 
 def get_main_tag_sub_tag_relation(main_tag):
-    with contract_api.DBSession(provider="zvt", data_schema=StockTags)() as session:
+    with contract_api.db_session_scope(provider="zvt", data_schema=StockTags) as session:
         df = SubTagInfo.query_data(
             session=session,
             columns=[SubTagInfo.tag],
@@ -972,7 +972,7 @@ def get_main_tag_sub_tag_relation(main_tag):
 
 
 def build_main_tag_industry_relation(build_relation_model: BuildMainTagIndustryRelationModel):
-    with contract_api.DBSession(provider="zvt", data_schema=StockTags)() as session:
+    with contract_api.db_session_scope(provider="zvt", data_schema=StockTags) as session:
         main_tag = build_relation_model.main_tag
         _create_main_tag_if_not_existed(main_tag=main_tag, main_tag_reason=main_tag)
 
@@ -1002,7 +1002,7 @@ def build_main_tag_industry_relation(build_relation_model: BuildMainTagIndustryR
 
 
 def build_main_tag_sub_tag_relation(build_relation_model: BuildMainTagIndustryRelationModel):
-    with contract_api.DBSession(provider="zvt", data_schema=SubTagInfo)() as session:
+    with contract_api.db_session_scope(provider="zvt", data_schema=SubTagInfo) as session:
         main_tag = build_relation_model.main_tag
         _create_main_tag_if_not_existed(main_tag=main_tag, main_tag_reason=main_tag)
 
@@ -1038,7 +1038,7 @@ def change_main_tag(change_main_tag_model: ChangeMainTagModel):
     new_main_tag = change_main_tag_model.new_main_tag
 
     _create_main_tag_if_not_existed(main_tag=new_main_tag, main_tag_reason=new_main_tag)
-    with contract_api.DBSession(provider="zvt", data_schema=StockTags)() as session:
+    with contract_api.db_session_scope(provider="zvt", data_schema=StockTags) as session:
         stock_tags: List[StockTags] = StockTags.query_data(
             filters=[StockTags.main_tag == current_main_tag],
             session=session,

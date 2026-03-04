@@ -51,7 +51,7 @@ def get_quote_stats():
 
 @trading_router.get("/get_query_stock_quote_setting", response_model=Optional[QueryStockQuoteSettingModel])
 def get_query_stock_quote_setting():
-    with contract_api.DBSession(provider="zvt", data_schema=QueryStockQuoteSetting)() as session:
+    with contract_api.db_session_scope(provider="zvt", data_schema=QueryStockQuoteSetting) as session:
         query_setting: List[dict] = QueryStockQuoteSetting.query_data(
             session=session, return_type="dict"
         )

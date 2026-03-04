@@ -87,7 +87,7 @@ def query_ts(ts_request_model: TSRequestModel):
 
 
 def build_trading_plan(build_trading_plan_model: BuildTradingPlanModel):
-    with contract_api.DBSession(provider="zvt", data_schema=TradingPlan)() as session:
+    with contract_api.db_session_scope(provider="zvt", data_schema=TradingPlan) as session:
         stock_id = build_trading_plan_model.stock_id
         trading_date_str = to_date_time_str(build_trading_plan_model.trading_date)
         trading_date = to_pd_timestamp(trading_date_str)
@@ -125,7 +125,7 @@ def build_trading_plan(build_trading_plan_model: BuildTradingPlanModel):
 
 
 def query_trading_plan(query_trading_plan_model: QueryTradingPlanModel):
-    with contract_api.DBSession(provider="zvt", data_schema=TradingPlan)() as session:
+    with contract_api.db_session_scope(provider="zvt", data_schema=TradingPlan) as session:
         time_range = query_trading_plan_model.time_range
         if time_range.relative_time_range:
             start_timestamp = date_time_by_interval(
@@ -142,7 +142,7 @@ def query_trading_plan(query_trading_plan_model: QueryTradingPlanModel):
 
 
 def get_current_trading_plan():
-    with contract_api.DBSession(provider="zvt", data_schema=TradingPlan)() as session:
+    with contract_api.db_session_scope(provider="zvt", data_schema=TradingPlan) as session:
         return TradingPlan.query_data(
             session=session,
             filters=[TradingPlan.status == ExecutionStatus.pending.value],
@@ -152,7 +152,7 @@ def get_current_trading_plan():
 
 
 def get_future_trading_plan():
-    with contract_api.DBSession(provider="zvt", data_schema=TradingPlan)() as session:
+    with contract_api.db_session_scope(provider="zvt", data_schema=TradingPlan) as session:
         return TradingPlan.query_data(
             session=session,
             filters=[TradingPlan.status == ExecutionStatus.init.value],
@@ -162,7 +162,7 @@ def get_future_trading_plan():
 
 
 def check_trading_plan():
-    with contract_api.DBSession(provider="zvt", data_schema=TradingPlan)() as session:
+    with contract_api.db_session_scope(provider="zvt", data_schema=TradingPlan) as session:
         plans = TradingPlan.query_data(
             session=session,
             filters=[TradingPlan.status == ExecutionStatus.init.value, TradingPlan.trading_date == current_date()],
@@ -460,7 +460,7 @@ def sell_stocks():
 
 
 def build_query_stock_quote_setting(build_query_stock_quote_setting_model: BuildQueryStockQuoteSettingModel):
-    with contract_api.DBSession(provider="zvt", data_schema=QueryStockQuoteSetting)() as session:
+    with contract_api.db_session_scope(provider="zvt", data_schema=QueryStockQuoteSetting) as session:
         the_id = "admin_setting"
         datas = QueryStockQuoteSetting.query_data(ids=[the_id], session=session, return_type="domain")
         if datas:
