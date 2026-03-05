@@ -195,9 +195,6 @@ def close_all_sessions() -> None:
             del zvt_context.sessions[key]
 
 
-DBSession = get_db_session_factory
-
-
 def get_entity_schema(entity_type: str) -> Type[TradableEntity]:
     """
     get entity schema from name
@@ -238,7 +235,6 @@ def common_filter(
     filters=None,
     order=None,
     limit=None,
-    distinct=None,
     time_field="timestamp",
 ):
     """
@@ -271,8 +267,6 @@ def common_filter(
         query = query.order_by(time_col.asc())
     if limit:
         query = query.limit(limit)
-    if distinct:
-        query = query.distinct(distinct)
 
     return query
 
@@ -325,7 +319,6 @@ def get_data(
     level: Union[IntervalLevel, str] = None,
     provider: str = None,
     columns: List = None,
-    col_label: dict = None,
     return_type: str = "df",
     start_timestamp: Union[pd.Timestamp, str] = None,
     end_timestamp: Union[pd.Timestamp, str] = None,
@@ -333,7 +326,6 @@ def get_data(
     session: Session = None,
     order=None,
     limit: int = None,
-    distinct=None,
     index: Union[str, list] = None,
     drop_index_col=False,
     time_field: str = "timestamp",
@@ -350,7 +342,6 @@ def get_data(
     :param level:
     :param provider:
     :param columns:
-    :param col_label: dict with key(column), value(label)
     :param return_type: df, domain or dict. default is df. When "domain", session must be passed.
     :param start_timestamp:
     :param end_timestamp:
@@ -383,15 +374,6 @@ def get_data(
             # make sure get timestamp
             if time_col not in cols:
                 cols.append(time_col)
-
-            if col_label:
-                cols_ = []
-                for col in cols:
-                    if col.name in col_label:
-                        cols_.append(col.label(col_label.get(col.name)))
-                    else:
-                        cols_.append(col)
-                cols = cols_
 
             query = sess.query(*cols)
         else:
@@ -426,7 +408,6 @@ def get_data(
             filters=filters,
             order=order,
             limit=limit,
-            distinct=distinct,
             time_field=time_field,
         )
 
@@ -642,7 +623,6 @@ def get_entities(
     code: str = None,
     provider: str = None,
     columns: List = None,
-    col_label: dict = None,
     return_type: str = "df",
     start_timestamp: Union[pd.Timestamp, str] = None,
     end_timestamp: Union[pd.Timestamp, str] = None,
@@ -665,7 +645,6 @@ def get_entities(
     :param code:
     :param provider:
     :param columns:
-    :param col_label:
     :param return_type:
     :param start_timestamp:
     :param end_timestamp:
@@ -701,7 +680,6 @@ def get_entities(
         level=None,
         provider=provider,
         columns=columns,
-        col_label=col_label,
         return_type=return_type,
         start_timestamp=start_timestamp,
         end_timestamp=end_timestamp,

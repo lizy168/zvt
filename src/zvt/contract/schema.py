@@ -127,7 +127,6 @@ class Mixin(object):
     @classmethod
     def query_data(
         cls,
-        provider_index: int = 0,
         ids: List[str] = None,
         entity_ids: List[str] = None,
         entity_id: str = None,
@@ -136,7 +135,6 @@ class Mixin(object):
         level: Union[IntervalLevel, str] = None,
         provider: str = None,
         columns: List = None,
-        col_label: dict = None,
         return_type: str = "df",
         start_timestamp: Union[pd.Timestamp, str] = None,
         end_timestamp: Union[pd.Timestamp, str] = None,
@@ -144,7 +142,6 @@ class Mixin(object):
         session: Session = None,
         order=None,
         limit: int = None,
-        distinct=None,
         index: Union[str, list] = None,
         drop_index_col=False,
         time_field: str = "timestamp",
@@ -152,8 +149,6 @@ class Mixin(object):
         """
         query data by the arguments
 
-        :param provider_index:
-        :param data_schema:
         :param ids:
         :param entity_ids:
         :param entity_id:
@@ -162,7 +157,6 @@ class Mixin(object):
         :param level:
         :param provider:
         :param columns:
-        :param col_label: dict with key(column), value(label)
         :param return_type: df, domain or dict. default is df
         :param start_timestamp:
         :param end_timestamp:
@@ -178,7 +172,7 @@ class Mixin(object):
         from .api import get_data
 
         if not provider:
-            provider = cls.get_providers()[provider_index]
+            provider = cls.get_providers()[0]
         return get_data(
             data_schema=cls,
             ids=ids,
@@ -189,7 +183,6 @@ class Mixin(object):
             level=level,
             provider=provider,
             columns=columns,
-            col_label=col_label,
             return_type=return_type,
             start_timestamp=start_timestamp,
             end_timestamp=end_timestamp,
@@ -198,7 +191,6 @@ class Mixin(object):
             order=order,
             limit=limit,
             index=index,
-            distinct=distinct,
             drop_index_col=drop_index_col,
             time_field=time_field,
         )
