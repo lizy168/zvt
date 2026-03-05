@@ -1,15 +1,20 @@
 # -*- coding: utf-8 -*-
 import inspect
 import json
+import logging
+import platform
 from datetime import timedelta
 from typing import Dict, List, Union
 
 import pandas as pd
 import pkg_resources
-from sqlalchemy import Column, String, DateTime, Float
-from sqlalchemy.orm import Session
+from sqlalchemy import Column, String, DateTime, Float, func, exists, and_
+from sqlalchemy.orm import Session, Query
+from sqlalchemy.sql.expression import text
 
 from zvt.contract import IntervalLevel
+
+logger = logging.getLogger(__name__)
 
 
 def _get_schema_providers() -> Dict[str, List[str]]:
@@ -31,7 +36,78 @@ def _get_schema_providers() -> Dict[str, List[str]]:
     return default
 
 
-from zvt.utils.time_utils import date_and_time, is_same_date_time, now_pd_timestamp
+from zvt.utils.time_utils import date_and_time, is_same_date_time, now_pd_timestamp, to_pd_timestamp
+
+
+def common_filter(
+    query: Query,
+    data_schema,
+    start_timestamp=None,
+    end_timestamp=None,
+    filters=None,
+    order=None,
+    limit=None,
+    time_field="timestamp",
+):
+    """Build filter by the arguments (time range, filters, order, limit)."""
+    assert data_schema is not None
+    time_col = eval("data_schema.{}".format(time_field))
+    if start_timestamp:
+        query = query.filter(time_col >= to_pd_timestamp(start_timestamp))
+    if end_timestamp:
+        query = query.filter(time_col <= to_pd_timestamp(end_timestamp))
+    if filters:
+        for f in filters:
+            query = query.filter(f)
+    if order is not None:
+        query = query.order_by(order)
+    else:
+        query = query.order_by(time_col.asc())
+    if limit:
+        query = query.limit(limit)
+    return query
+
+
+def _row2dict(row):
+    d = {}
+    for column in row.__table__.columns:
+        d[column.name] = getattr(row, column.name)
+    return d
+
+
+def get_schema_columns(schema) -> List[str]:
+    """Return column names of the schema table."""
+    return list(schema.__table__.columns.keys())
+
+
+def _ensure_schema_providers_loaded():
+    """Populate zvt_context from config schema_providers for schemas without Recorders."""
+    from zvt.contract import zvt_context
+
+    if getattr(_ensure_schema_providers_loaded, "_done", False):
+        return
+    try:
+        schema_providers = _get_schema_providers()
+        for db_name, providers in schema_providers.items():
+            for p in providers:
+                if p not in zvt_context.providers:
+                    zvt_context.providers.append(p)
+                if p not in zvt_context.provider_map_dbnames:
+                    zvt_context.provider_map_dbnames[p] = []
+                if db_name not in zvt_context.provider_map_dbnames[p]:
+                    zvt_context.provider_map_dbnames[p].append(db_name)
+    except Exception:
+        pass
+    _ensure_schema_providers_loaded._done = True
+
+
+def get_schema_by_name(name: str):
+    """Get domain schema by class name from the global schema registry."""
+    from zvt.contract import zvt_context
+
+    for schema in zvt_context.schemas:
+        if schema.__name__ == name:
+            return schema
 
 
 class Mixin(object):
@@ -119,10 +195,118 @@ class Mixin(object):
                     assert item[0][k] == data[k]
 
     @classmethod
-    def get_by_id(cls, session, id):
-        from .api import get_by_id
+    def get_by_id(cls, session: Session, id: str):
+        """Get one record by id. Caller must provide an open session."""
+        return session.query(cls).get(id)
 
-        return get_by_id(session=session, data_schema=cls, id=id)
+    @classmethod
+    def data_exist(cls, session: Session, id: str) -> bool:
+        """Whether a record with the given id exists."""
+        return session.query(exists().where(and_(cls.id == id))).scalar()
+
+    @classmethod
+    def get_data_count(cls, filters=None, provider=None, session: Session = None):
+        """Get record count for this schema with optional filters."""
+        from .api import db_session_scope
+
+        def _count(sess):
+            query = sess.query(cls)
+            if filters:
+                for f in filters:
+                    query = query.filter(f)
+            count_q = query.statement.with_only_columns(func.count(cls.id)).order_by(None)
+            return sess.execute(count_q).scalar()
+
+        if session is not None:
+            return _count(session)
+        provider = provider or cls.get_providers()[0]
+        with db_session_scope(provider=provider, data_schema=cls) as sess:
+            return _count(sess)
+
+    @classmethod
+    def del_data(cls, filters=None, provider=None):
+        """Delete records matching filters."""
+        from .api import db_session_scope
+
+        provider = provider or cls.get_providers()[0]
+        with db_session_scope(provider=provider, data_schema=cls) as session:
+            query = session.query(cls)
+            if filters:
+                for f in filters:
+                    query = query.filter(f)
+            query.delete()
+
+    @classmethod
+    def get_columns(cls) -> List[str]:
+        """Return column names of this schema's table."""
+        return get_schema_columns(cls)
+
+    @classmethod
+    def df_to_db(
+        cls,
+        df: pd.DataFrame,
+        provider: str,
+        force_update: bool = False,
+        sub_size: int = 8000,
+        drop_duplicates: bool = True,
+        dtype=None,
+        session: Session = None,
+        need_check: bool = True,
+    ):
+        """Store the DataFrame to this schema's table."""
+        from .api import db_session_scope
+        from zvt.utils.pd_utils import pd_is_not_null
+
+        if not pd_is_not_null(df):
+            return 0
+        if drop_duplicates and df.duplicated(subset="id").any():
+            logger.warning("remove duplicated: %s", df[df.duplicated()])
+            df = df.drop_duplicates(subset="id", keep="last")
+        schema_cols = cls.get_columns()
+        cols = list(set(df.columns.tolist()) & set(schema_cols))
+        if not cols:
+            logger.warning("wrong cols")
+            return 0
+        df = df[cols]
+        size = len(df)
+        if platform.system() == "Windows":
+            sub_size = 900
+        step_size = int(size / sub_size) + (1 if size % sub_size else 0) if size >= sub_size else 1
+        saved = 0
+
+        def _do_save(sess):
+            nonlocal saved
+            for step in range(step_size):
+                df_current = df.iloc[sub_size * step : sub_size * (step + 1)]
+                if need_check:
+                    if force_update:
+                        ids = df_current["id"].tolist()
+                        if len(ids) == 1:
+                            sql = text('delete from `{}` where id = "{}"'.format(cls.__tablename__, ids[0]))
+                        else:
+                            sql = text("delete from `{}` where id in {}".format(cls.__tablename__, tuple(ids)))
+                        sess.execute(sql)
+                    else:
+                        current = cls.query_data(
+                            session=sess,
+                            columns=[cls.id],
+                            provider=provider,
+                            ids=df_current["id"].tolist(),
+                        )
+                        if pd_is_not_null(current):
+                            df_current = df_current[~df_current["id"].isin(current["id"])]
+                if pd_is_not_null(df_current):
+                    saved += len(df_current)
+                    df_current.to_sql(
+                        cls.__tablename__, sess.connection(), index=False, if_exists="append", dtype=dtype
+                    )
+                sess.commit()
+            return saved
+
+        if session is not None:
+            return _do_save(session)
+        with db_session_scope(provider=provider, data_schema=cls) as sess:
+            return _do_save(sess)
 
     @classmethod
     def query_data(
@@ -169,31 +353,84 @@ class Mixin(object):
         :param time_field:
         :return: results basing on return_type.
         """
-        from .api import get_data
+        from .api import db_session_scope
+        from zvt.utils.pd_utils import pd_is_not_null, index_df
 
+        _ensure_schema_providers_loaded()
+        data_schema = cls
+        providers = data_schema.get_providers()
+        if not providers:
+            raise ValueError(f"no provider registered for: {data_schema}")
         if not provider:
-            provider = cls.get_providers()[0]
-        return get_data(
-            data_schema=cls,
-            ids=ids,
-            entity_ids=entity_ids,
-            entity_id=entity_id,
-            codes=codes,
-            code=code,
-            level=level,
-            provider=provider,
-            columns=columns,
-            return_type=return_type,
-            start_timestamp=start_timestamp,
-            end_timestamp=end_timestamp,
-            filters=filters,
-            session=session,
-            order=order,
-            limit=limit,
-            index=index,
-            drop_index_col=drop_index_col,
-            time_field=time_field,
-        )
+            provider = providers[0]
+
+        def _query(sess):
+            time_col = eval("data_schema.{}".format(time_field))
+
+            if columns:
+                cols = list(columns)
+                for i, col in enumerate(cols):
+                    if isinstance(col, str):
+                        cols[i] = eval("data_schema.{}".format(col))
+                if time_col not in cols:
+                    cols.append(time_col)
+                query = sess.query(*cols)
+            else:
+                query = sess.query(data_schema)
+
+            if entity_id:
+                query = query.filter(data_schema.entity_id == entity_id)
+            if entity_ids:
+                query = query.filter(data_schema.entity_id.in_(entity_ids))
+            if code:
+                query = query.filter(data_schema.code == code)
+            if codes:
+                query = query.filter(data_schema.code.in_(codes))
+            if ids:
+                query = query.filter(data_schema.id.in_(ids))
+
+            if level:
+                try:
+                    data_schema.level
+                    level_val = level.value if type(level) == IntervalLevel else level
+                    query = query.filter(data_schema.level == level_val)
+                except Exception:
+                    pass
+
+            query = common_filter(
+                query,
+                data_schema=data_schema,
+                start_timestamp=start_timestamp,
+                end_timestamp=end_timestamp,
+                filters=filters,
+                order=order,
+                limit=limit,
+                time_field=time_field,
+            )
+
+            if return_type == "df":
+                df = pd.read_sql(query.statement, query.session.bind)
+                if pd_is_not_null(df) and index:
+                    df = index_df(df, index=index, drop=drop_index_col, time_field=time_field)
+                return df
+            if return_type == "domain":
+                return query.all()
+            if return_type == "dict":
+                domains = query.all()
+                return [_row2dict(item) for item in domains]
+            if return_type == "select":
+                return query.selectable
+            return None
+
+        if session is not None:
+            return _query(session)
+        if return_type == "domain":
+            raise ValueError(
+                "session is required when return_type='domain' so returned instances stay bound. "
+                "Use get_db_session() or db_session_scope() and close the session when done."
+            )
+        with db_session_scope(provider=provider, data_schema=data_schema) as sess:
+            return _query(sess)
 
     @classmethod
     def get_storages(
@@ -560,8 +797,6 @@ class Portfolio(TradableEntity):
         :param provider: the data provider
         :return:
         """
-        from zvt.contract.api import get_schema_by_name
-
         schema_str = f"{cls.__name__}Stock"
         portfolio_stock = get_schema_by_name(schema_str)
         return portfolio_stock.query_data(provider=provider, code=code, codes=codes, timestamp=timestamp, ids=ids)
@@ -641,4 +876,6 @@ __all__ = [
     "PortfolioStockHistory",
     "TradableMeetActor",
     "ActorMeetTradable",
+    "get_schema_by_name",
+    "get_schema_columns",
 ]

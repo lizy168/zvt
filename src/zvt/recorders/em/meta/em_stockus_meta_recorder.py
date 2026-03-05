@@ -1,7 +1,6 @@
 # -*- coding: utf-8 -*-
 from typing import List
 
-from zvt.contract.api import df_to_db
 from zvt.contract.recorder import Recorder
 from zvt.domain.meta.stockus_meta import Stockus
 from zvt.recorders.em import em_api
@@ -23,7 +22,7 @@ class EMStockusRecorder(Recorder):
             df["total_cap"] = df["total_cap"].fillna(0)
             df["float_cap"] = df["float_cap"].fillna(0)
 
-            df_to_db(df=df, data_schema=self.data_schema, provider=self.provider, force_update=self.force_update)
+            self.data_schema.df_to_db(df, provider=self.provider, force_update=self.force_update)
 
             for item in df[["id", "name", "total_cap", "float_cap"]].values.tolist():
                 entity_id = item[0]

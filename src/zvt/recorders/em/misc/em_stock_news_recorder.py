@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 import pandas as pd
 
-from zvt.contract.api import df_to_db, decode_entity_id
+from zvt.contract.api import decode_entity_id
 from zvt.contract.recorder import FixedCycleDataRecorder
 from zvt.domain import Stock, Stockus, Stockhk
 from zvt.domain.misc.stock_news import StockNews
@@ -50,7 +50,7 @@ class EMStockNewsRecorder(FixedCycleDataRecorder):
         if news:
             df = pd.DataFrame.from_records(news)
             self.logger.info(df)
-            df_to_db(df=df, data_schema=self.data_schema, provider=self.provider, force_update=self.force_update)
+            self.data_schema.df_to_db(df, provider=self.provider, force_update=self.force_update)
 
 
 if __name__ == "__main__":

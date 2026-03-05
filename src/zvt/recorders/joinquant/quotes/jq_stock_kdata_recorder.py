@@ -6,7 +6,6 @@ from jqdatapy.api import get_token, get_bars
 from zvt import zvt_config
 from zvt.api.kdata import generate_kdata_id, get_kdata_schema, get_kdata
 from zvt.contract import IntervalLevel, AdjustType, AdjustType
-from zvt.contract.api import df_to_db
 from zvt.contract.recorder import FixedCycleDataRecorder
 from zvt.domain import Stock, StockKdataCommon, Stock1wkHfqKdata
 from zvt.recorders.joinquant.common import to_jq_trading_level, to_jq_entity_id
@@ -178,7 +177,7 @@ class JqChinaStockKdataRecorder(FixedCycleDataRecorder):
 
             df = df.drop_duplicates(subset="id", keep="last")
 
-            df_to_db(df=df, data_schema=self.data_schema, provider=self.provider, force_update=self.force_update)
+            self.data_schema.df_to_db(df, provider=self.provider, force_update=self.force_update)
 
         return None
 

@@ -2,7 +2,6 @@
 import pandas as pd
 from jqdatapy.api import get_trade_days
 
-from zvt.contract.api import df_to_db
 from zvt.contract.recorder import TimeSeriesDataRecorder
 from zvt.domain import StockTradeDay, Stock
 from zvt.utils.time_utils import to_date_time_str
@@ -54,7 +53,7 @@ class StockTradeDayRecorder(TimeSeriesDataRecorder):
         df["id"] = [to_date_time_str(date) for date in dates]
         df["entity_id"] = "stock_sz_000001"
 
-        df_to_db(df=df, data_schema=self.data_schema, provider=self.provider, force_update=self.force_update)
+        self.data_schema.df_to_db(df, provider=self.provider, force_update=self.force_update)
 
 
 if __name__ == "__main__":

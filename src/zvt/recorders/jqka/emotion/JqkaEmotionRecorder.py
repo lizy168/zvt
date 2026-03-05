@@ -5,7 +5,6 @@ from typing import List
 import pandas as pd
 
 from zvt.api.utils import china_stock_code_to_id
-from zvt.contract.api import df_to_db
 from zvt.contract.recorder import TimestampsDataRecorder
 from zvt.domain import Stock
 from zvt.domain.emotion.emotion import LimitUpInfo, LimitDownInfo, Emotion
@@ -87,9 +86,8 @@ class JqkaLimitUpRecorder(TimestampsDataRecorder):
                     }
                     records.append(record)
                 df = pd.DataFrame.from_records(records)
-                df_to_db(
-                    data_schema=self.data_schema,
-                    df=df,
+                self.data_schema.df_to_db(
+                    df,
                     provider=self.provider,
                     force_update=True,
                     drop_duplicates=True,
@@ -141,9 +139,8 @@ class JqkaLimitDownRecorder(TimestampsDataRecorder):
                     }
                     records.append(record)
                 df = pd.DataFrame.from_records(records)
-                df_to_db(
-                    data_schema=self.data_schema,
-                    df=df,
+                self.data_schema.df_to_db(
+                    df,
                     provider=self.provider,
                     force_update=True,
                     drop_duplicates=True,
@@ -207,9 +204,8 @@ class JqkaEmotionRecorder(TimestampsDataRecorder):
                     "continuous_power": continuous_power,
                 }
                 df = pd.DataFrame.from_records([record])
-                df_to_db(
-                    data_schema=self.data_schema,
-                    df=df,
+                self.data_schema.df_to_db(
+                    df,
                     provider=self.provider,
                     force_update=True,
                     drop_duplicates=True,

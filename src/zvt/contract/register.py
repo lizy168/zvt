@@ -3,7 +3,6 @@
 Phase 3: providers removed from register_schema. Providers come from Recorder registration.
 """
 import logging
-from typing import List
 
 import sqlalchemy
 from sqlalchemy import MetaData

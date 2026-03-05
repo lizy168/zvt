@@ -1,6 +1,5 @@
 # -*- coding: utf-8 -*-
 
-from zvt.contract.api import df_to_db
 from zvt.contract.recorder import Recorder
 from zvt.domain import Index
 from zvt.recorders.exchange.api import cn_index_api, cs_index_api
@@ -24,7 +23,7 @@ class ExchangeIndexRecorder(Recorder):
     # 中证，上海
     def record_cs_index(self, index_type):
         df = cs_index_api.get_cs_index(index_type=index_type)
-        df_to_db(data_schema=self.data_schema, df=df, provider=self.provider, force_update=True)
+        self.data_schema.df_to_db(df, provider=self.provider, force_update=True)
         self.logger.info(f"finish record {index_type} index")
 
     # 国证，深圳
@@ -39,7 +38,7 @@ class ExchangeIndexRecorder(Recorder):
 
         for category, _ in category_map_url.items():
             df = cn_index_api.get_cn_index(index_type=index_type, category=category)
-            df_to_db(data_schema=self.data_schema, df=df, provider=self.provider, force_update=True)
+            self.data_schema.df_to_db(df, provider=self.provider, force_update=True)
             self.logger.info(f"finish record {index_type} index:{category.value}")
 
 

@@ -4,7 +4,7 @@ from typing import List, Union
 import pandas as pd
 
 from zvt.contract import IntervalLevel
-from zvt.contract.api import get_data, get_db_session
+from zvt.contract.api import get_db_session
 from zvt.contract.drawer import Drawer
 from zvt.contract.normal_data import NormalData
 from zvt.contract.reader import DataReader
@@ -37,8 +37,7 @@ def get_trader_info(
         else:
             filters = [TraderInfo.trader_name == trader_name]
 
-    return get_data(
-        data_schema=TraderInfo,
+    return TraderInfo.query_data(
         entity_id=None,
         codes=None,
         level=None,

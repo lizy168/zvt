@@ -2,7 +2,6 @@
 import pandas as pd
 
 from zvt.contract import IntervalLevel
-from zvt.contract.api import df_to_db
 from zvt.contract.recorder import FixedCycleDataRecorder
 from zvt.domain import Country
 from zvt.domain.macro.monetary import TreasuryYield
@@ -59,9 +58,8 @@ class EMTreasuryYieldRecorder(FixedCycleDataRecorder):
             result = em_api.get_treasury_yield(fetch_all=True)
         if result:
             df = pd.DataFrame.from_records(result)
-            df_to_db(
-                data_schema=self.data_schema,
-                df=df,
+            self.data_schema.df_to_db(
+                df,
                 provider=self.provider,
                 force_update=True,
                 drop_duplicates=True,

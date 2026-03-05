@@ -5,7 +5,6 @@ import pandas as pd
 
 from zvt.api.utils import to_report_period_type, value_to_pct
 from zvt.contract import ActorType
-from zvt.contract.api import df_to_db
 from zvt.contract.recorder import TimestampsDataRecorder
 from zvt.domain import Stock
 from zvt.domain.actor.stock_actor import StockActorSummary
@@ -68,9 +67,8 @@ class EMStockActorSummaryRecorder(TimestampsDataRecorder):
                         for item in result
                     ]
                     df = pd.DataFrame.from_records(summary_list)
-                    df_to_db(
-                        data_schema=self.data_schema,
-                        df=df,
+                    self.data_schema.df_to_db(
+                        df,
                         provider=self.provider,
                         force_update=True,
                         drop_duplicates=True,

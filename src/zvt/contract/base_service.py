@@ -2,7 +2,7 @@
 import json
 from typing import Type, List
 
-from zvt.contract.api import del_data, get_db_session
+from zvt.contract.api import get_db_session
 from zvt.contract.zvt_info import StateMixin
 from zvt.utils.str_utils import to_snake_str
 
@@ -33,7 +33,7 @@ class StatefulService(object):
         filters = [self.state_schema.state_name == self.name]
         if entity_id:
             filters = filters + [self.state_schema.entity_id == entity_id]
-        del_data(self.state_schema, filters=filters)
+        self.state_schema.del_data(filters=filters)
 
     def decode_state(self, state: str):
         """

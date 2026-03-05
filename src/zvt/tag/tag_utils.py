@@ -6,7 +6,6 @@ from typing import List, Dict
 import pandas as pd
 
 from zvt import zvt_env
-from zvt.contract.api import df_to_db
 from zvt.domain import Block
 from zvt.tag.common import StockPoolType
 from zvt.tag.tag_schemas import MainTagInfo, SubTagInfo, HiddenTagInfo, StockPoolInfo, IndustryInfo
@@ -184,31 +183,31 @@ def _get_initial_hidden_tag_info():
 def build_initial_main_tag_info(force_update=False):
     main_tag_info_list = _get_initial_main_tag_info()
     df = pd.DataFrame.from_records(main_tag_info_list)
-    df_to_db(df=df, data_schema=MainTagInfo, provider="zvt", force_update=force_update)
+    MainTagInfo.df_to_db(df, provider="zvt", force_update=force_update)
 
 
 def build_initial_industry_info(force_update=False):
     initial_industry_info = _get_initial_industry_info()
     df = pd.DataFrame.from_records(initial_industry_info)
-    df_to_db(df=df, data_schema=IndustryInfo, provider="zvt", force_update=force_update)
+    IndustryInfo.df_to_db(df, provider="zvt", force_update=force_update)
 
 
 def build_initial_sub_tag_info(force_update=False):
     sub_tag_info_list = _get_initial_sub_tag_info()
     df = pd.DataFrame.from_records(sub_tag_info_list)
-    df_to_db(df=df, data_schema=SubTagInfo, provider="zvt", force_update=force_update)
+    SubTagInfo.df_to_db(df, provider="zvt", force_update=force_update)
 
 
 def build_initial_stock_pool_info(force_update=False):
     stock_pool_info_list = _get_initial_stock_pool_info()
     df = pd.DataFrame.from_records(stock_pool_info_list)
-    df_to_db(df=df, data_schema=StockPoolInfo, provider="zvt", force_update=force_update)
+    StockPoolInfo.df_to_db(df, provider="zvt", force_update=force_update)
 
 
 def build_initial_hidden_tag_info(force_update=False):
     hidden_tag_info_list = _get_initial_hidden_tag_info()
     df = pd.DataFrame.from_records(hidden_tag_info_list)
-    df_to_db(df=df, data_schema=HiddenTagInfo, provider="zvt", force_update=force_update)
+    HiddenTagInfo.df_to_db(df, provider="zvt", force_update=force_update)
 
 
 def get_main_tags():

@@ -628,7 +628,7 @@ def delete_stock_pool(stock_pool_name: str, session: Optional[Session] = None):
             return_type="domain",
         )
 
-        contract_api.del_data(data_schema=StockPools, filters=[StockPools.stock_pool_name == stock_pool_name])
+        StockPools.del_data(filters=[StockPools.stock_pool_name == stock_pool_name])
 
         if stock_pool_info:
             sess.delete(stock_pool_info[0])

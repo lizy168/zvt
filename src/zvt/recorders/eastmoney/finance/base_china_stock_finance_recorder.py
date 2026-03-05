@@ -3,7 +3,6 @@
 from jqdatapy.api import get_fundamentals, get_query_count
 
 from zvt.api.utils import to_report_period_type
-from zvt.contract.api import get_data
 from zvt.domain import FinanceFactor, ReportPeriod
 from zvt.recorders.eastmoney.common import (
     company_type_flag,
@@ -175,8 +174,7 @@ class BaseChinaStockFinanceRecorder(EastmoneyTimestampsDataRecorder):
             return
 
         # fill the timestamp for report published date
-        the_data_list = get_data(
-            data_schema=self.data_schema,
+        the_data_list = self.data_schema.query_data(
             provider=self.provider,
             entity_id=entity.id,
             order=self.data_schema.timestamp.asc(),

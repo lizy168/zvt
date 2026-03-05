@@ -1,7 +1,6 @@
 # -*- coding: utf-8 -*-
 from typing import List
 
-from zvt.contract.api import df_to_db
 from zvt.contract.recorder import Recorder
 from zvt.domain.meta.stockhk_meta import Stockhk
 from zvt.recorders.em import em_api
@@ -22,7 +21,7 @@ class EMStockhkRecorder(Recorder):
             df_south["total_cap"] = df_south["total_cap"].fillna(0)
             df_south["float_cap"] = df_south["float_cap"].fillna(0)
             df_south["south"] = True
-            df_to_db(df=df_south, data_schema=self.data_schema, provider=self.provider, force_update=self.force_update)
+            self.data_schema.df_to_db(df_south, provider=self.provider, force_update=self.force_update)
 
             if not self.record_south_only:
                 df = em_api.get_tradable_list(entity_type="stockhk")
@@ -38,9 +37,8 @@ class EMStockhkRecorder(Recorder):
                     df_other = df.loc[~df.index.isin(df_south.index)].copy()
                     df_other["south"] = False
 
-                    df_to_db(
-                        df=df_other,
-                        data_schema=self.data_schema,
+                    self.data_schema.df_to_db(
+                        df_other,
                         provider=self.provider,
                         force_update=self.force_update,
                     )

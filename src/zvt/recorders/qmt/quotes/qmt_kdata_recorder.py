@@ -4,7 +4,7 @@ import pandas as pd
 from zvt.api.kdata import get_kdata_schema, get_kdata
 from zvt.broker.qmt import qmt_quote
 from zvt.contract import IntervalLevel, AdjustType
-from zvt.contract.api import df_to_db, get_db_session, get_entities
+from zvt.contract.api import get_db_session, get_entities
 from zvt.contract.recorder import FixedCycleDataRecorder
 from zvt.domain import (
     Stock,
@@ -161,7 +161,7 @@ class BaseQmtKdataRecorder(FixedCycleDataRecorder):
             df["name"] = entity.name
             df.rename(columns={"amount": "turnover"}, inplace=True)
             df["change_pct"] = (df["close"] - df["preClose"]) / df["preClose"]
-            df_to_db(df=df, data_schema=self.data_schema, provider=self.provider, force_update=self.force_update)
+            self.data_schema.df_to_db(df, provider=self.provider, force_update=self.force_update)
         else:
             self.logger.info(f"no kdata for {entity.id}")
 

@@ -3,7 +3,6 @@ import logging
 
 import requests
 
-from zvt.contract.api import get_data_count, get_data
 from zvt.contract.recorder import TimestampsDataRecorder, TimeSeriesDataRecorder
 from zvt.domain import CompanyType
 from zvt.domain.meta.stock_meta import StockDetail
@@ -179,8 +178,8 @@ class EastmoneyPageabeDataRecorder(BaseEastmoneyRecorder, TimeSeriesDataRecorder
             return None, None, 0, None
 
         # get local count
-        local_count = get_data_count(
-            data_schema=self.data_schema, session=self.session, filters=[self.data_schema.entity_id == entity.id]
+        local_count = self.data_schema.get_data_count(
+            session=self.session, filters=[self.data_schema.entity_id == entity.id]
         )
         # FIXME:the > case
         if local_count >= remote_count:
@@ -212,10 +211,9 @@ class EastmoneyMoreDataRecorder(BaseEastmoneyRecorder, TimeSeriesDataRecorder):
 
     def evaluate_start_end_size_timestamps(self, entity):
         # get latest record
-        latest_record = get_data(
+        latest_record = self.data_schema.query_data(
             entity_id=entity.id,
             provider=self.provider,
-            data_schema=self.data_schema,
             order=self.data_schema.timestamp.desc(),
             limit=1,
             return_type="domain",

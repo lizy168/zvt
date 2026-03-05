@@ -7,7 +7,7 @@ from zvt import zvt_config, init_log
 from zvt.api.kdata import get_latest_kdata_date, get_kdata_schema
 from zvt.api.selector import get_entity_ids_by_filter
 from zvt.contract import AdjustType
-from zvt.contract.api import get_entity_ids, get_data_count
+from zvt.contract.api import get_entity_ids
 from zvt.domain import (
     Stock,
     Block,
@@ -118,7 +118,7 @@ def record_stock_data_and_build_stock_pools(provider="em", adjust_type=AdjustTyp
     kdata_date = get_latest_kdata_date(provider=provider, entity_type="stock", adjust_type=adjust_type)
 
     kdata_schema = get_kdata_schema(entity_type="stock", level="1d", adjust_type=adjust_type)
-    kdata_size = get_data_count(kdata_schema, filters=[kdata_schema.timestamp == kdata_date], provider=provider)
+    kdata_size = kdata_schema.get_data_count(filters=[kdata_schema.timestamp == kdata_date], provider=provider)
 
     if kdata_size < 5000:
         logger.warning(f"当前行情数据量过少: {kdata_size}, 不进行股票池构建")

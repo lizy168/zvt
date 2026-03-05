@@ -5,7 +5,6 @@ import io
 import pandas as pd
 import requests
 
-from zvt.contract.api import df_to_db
 from zvt.contract.recorder import Recorder
 from zvt.domain import Stock, StockDetail
 from zvt.recorders.consts import DEFAULT_SH_HEADER, DEFAULT_SZ_HEADER
@@ -80,9 +79,9 @@ class ExchangeStockMetaRecorder(Recorder):
             df["timestamp"] = df["list_date"]
             df = df.dropna(axis=0, how="any")
             df = df.drop_duplicates(subset=("id"), keep="last")
-            df_to_db(df=df, data_schema=self.data_schema, provider=self.provider, force_update=False)
+            self.data_schema.df_to_db(df, provider=self.provider, force_update=False)
             # persist StockDetail too
-            df_to_db(df=df, data_schema=StockDetail, provider=self.provider, force_update=False)
+            StockDetail.df_to_db(df, provider=self.provider, force_update=False)
             self.logger.info(df.tail())
             self.logger.info("persist stock list successs")
 

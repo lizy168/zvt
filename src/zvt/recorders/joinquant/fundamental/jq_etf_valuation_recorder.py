@@ -2,7 +2,6 @@
 import pandas as pd
 
 from zvt.api.portfolio import get_etf_stocks
-from zvt.contract.api import df_to_db
 from zvt.contract.recorder import TimeSeriesDataRecorder
 from zvt.domain import StockValuation, Etf, EtfValuation
 from zvt.utils.pd_utils import pd_is_not_null
@@ -105,8 +104,8 @@ class JqChinaEtfValuationRecorder(TimeSeriesDataRecorder):
 
                     self.logger.info(df)
 
-                    df_to_db(
-                        df=df, data_schema=self.data_schema, provider=self.provider, force_update=self.force_update
+                    self.data_schema.df_to_db(
+                        df, provider=self.provider, force_update=self.force_update
                     )
 
         return None

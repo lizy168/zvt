@@ -4,7 +4,6 @@ from jqdatapy.api import run_query
 
 from zvt.api.portfolio import portfolio_relate_stock
 from zvt.api.utils import china_stock_code_to_id
-from zvt.contract.api import df_to_db
 from zvt.contract.recorder import Recorder, TimeSeriesDataRecorder
 from zvt.domain.meta.fund_meta import Fund, FundStock
 from zvt.recorders.joinquant.common import to_entity_id, jq_to_report_period
@@ -60,7 +59,7 @@ class JqChinaFundRecorder(Recorder):
                     df["id"] = df["entity_id"]
                     df["entity_type"] = "fund"
                     df["exchange"] = "sz"
-                    df_to_db(df, data_schema=Fund, provider=self.provider, force_update=self.force_update)
+                    Fund.df_to_db(df, provider=self.provider, force_update=self.force_update)
                     self.logger.info(
                         f"persist fund {operate_mode_id} list success {start_timestamp} to {end_timestamp}"
                     )
@@ -120,8 +119,8 @@ class JqChinaFundStockRecorder(TimeSeriesDataRecorder):
                 df["report_date"] = pd.to_datetime(df["period_end"])
                 df["report_period"] = df["report_type"].apply(lambda x: jq_to_report_period(x))
 
-                saved = df_to_db(
-                    df=df, data_schema=self.data_schema, provider=self.provider, force_update=self.force_update
+                saved = self.data_schema.df_to_db(
+                    df, provider=self.provider, force_update=self.force_update
                 )
 
                 # 取不到非重复的数据

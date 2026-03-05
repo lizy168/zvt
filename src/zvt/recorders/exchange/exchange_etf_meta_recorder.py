@@ -8,7 +8,6 @@ import pandas as pd
 import requests
 
 from zvt.api.utils import china_stock_code_to_id
-from zvt.contract.api import df_to_db
 from zvt.contract.recorder import Recorder
 from zvt.domain import EtfStock, Etf
 from zvt.recorders.consts import DEFAULT_SH_ETF_LIST_HEADER
@@ -68,7 +67,7 @@ class ChinaETFListSpider(Recorder):
         df = df.dropna(axis=0, how="any")
         df = df.drop_duplicates(subset="id", keep="last")
 
-        df_to_db(df=df, data_schema=Etf, provider=self.provider, force_update=False)
+        Etf.df_to_db(df, provider=self.provider, force_update=False)
 
     def download_sh_etf_component(self, df: pd.DataFrame):
         query_url = (
@@ -99,7 +98,7 @@ class ChinaETFListSpider(Recorder):
             response_df["stock_id"] = response_df["stock_code"].apply(lambda code: china_stock_code_to_id(code))
             response_df["id"] = response_df["stock_id"].apply(lambda x: f"{etf_id}_{x}")
 
-            df_to_db(data_schema=self.data_schema, df=response_df, provider=self.provider)
+            self.data_schema.df_to_db(response_df, provider=self.provider)
             self.logger.info(f'{etf["FUND_NAME"]} - {etf_code} 成分股抓取完成...')
 
             self.sleep()
@@ -147,7 +146,7 @@ class ChinaETFListSpider(Recorder):
             response_df["stock_id"] = response_df["stock_code"].apply(lambda code: china_stock_code_to_id(code))
             response_df["id"] = response_df["stock_id"].apply(lambda x: f"{etf_id}_{x}")
 
-            df_to_db(data_schema=self.data_schema, df=response_df, provider=self.provider)
+            self.data_schema.df_to_db(response_df, provider=self.provider)
             self.logger.info(f'{etf["证券简称"]} - {etf_code} 成分股抓取完成...')
 
             self.sleep()

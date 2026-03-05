@@ -4,7 +4,6 @@ from typing import List
 
 import pandas as pd
 
-from zvt.contract.api import df_to_db
 from zvt.contract.recorder import TimestampsDataRecorder
 from zvt.domain import Index, IndexStock
 from zvt.recorders.exchange.api import cs_index_stock_api, cn_index_stock_api
@@ -67,11 +66,11 @@ class ExchangeIndexStockRecorder(TimestampsDataRecorder):
         if entity.publisher == "cnindex":
             for timestamp in timestamps:
                 df = cn_index_stock_api.get_cn_index_stock(code=entity.code, timestamp=timestamp, name=entity.name)
-                df_to_db(data_schema=self.data_schema, df=df, provider=self.provider, force_update=True)
+                self.data_schema.df_to_db(df, provider=self.provider, force_update=True)
         elif entity.publisher == "csindex":
             # cs index not support history data
             df = cs_index_stock_api.get_cs_index_stock(code=entity.code, timestamp=None, name=entity.name)
-            df_to_db(data_schema=self.data_schema, df=df, provider=self.provider, force_update=True)
+            self.data_schema.df_to_db(df, provider=self.provider, force_update=True)
 
 
 if __name__ == "__main__":

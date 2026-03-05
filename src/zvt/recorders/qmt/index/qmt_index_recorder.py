@@ -5,7 +5,6 @@ from zvt.api.kdata import get_kdata_schema
 from zvt.broker.qmt import qmt_quote
 from zvt.consts import IMPORTANT_INDEX
 from zvt.contract import IntervalLevel
-from zvt.contract.api import df_to_db
 from zvt.contract.recorder import FixedCycleDataRecorder
 from zvt.contract.utils import evaluate_size_from_timestamp
 from zvt.domain import Index, IndexKdataCommon
@@ -104,7 +103,7 @@ class QmtIndexRecorder(FixedCycleDataRecorder):
             df["name"] = entity.name
             df.rename(columns={"amount": "turnover"}, inplace=True)
             df["change_pct"] = (df["close"] - df["preClose"]) / df["preClose"]
-            df_to_db(df=df, data_schema=self.data_schema, provider=self.provider, force_update=self.force_update)
+            self.data_schema.df_to_db(df, provider=self.provider, force_update=self.force_update)
 
         else:
             self.logger.info(f"no kdata for {entity.id}")

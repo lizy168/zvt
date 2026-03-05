@@ -8,7 +8,7 @@ from xtquant import xtdata
 from zvt.api.kdata import get_recent_trade_dates
 from zvt.api.selector import get_entity_ids_by_filter
 from zvt.contract import IntervalLevel, AdjustType
-from zvt.contract.api import decode_entity_id, df_to_db, get_db_session
+from zvt.contract.api import decode_entity_id, get_db_session
 from zvt.domain import StockQuote, Stock, Stock1dKdata, StockQuoteLog, Stock1mQuote
 from zvt.utils.pd_utils import pd_is_not_null
 from zvt.utils.time_utils import (
@@ -297,7 +297,7 @@ def tick_to_quote(entity_df):
         df["id"] = df[["entity_id", "timestamp"]].apply(
             lambda se: "{}_{}".format(se["entity_id"], to_date_time_str(se["timestamp"])), axis=1
         )
-        df_to_db(df, data_schema=StockQuote, provider="qmt", force_update=True, drop_duplicates=False)
+        StockQuote.df_to_db(df, provider="qmt", force_update=True, drop_duplicates=False)
 
         # 历史记录
         # df["id"] = df[["entity_id", "timestamp"]].apply(
@@ -310,7 +310,7 @@ def tick_to_quote(entity_df):
             lambda se: "{}_{}".format(se["entity_id"], to_date_time_str(se["timestamp"], fmt=TIME_FORMAT_MINUTE)),
             axis=1,
         )
-        df_to_db(df, data_schema=Stock1mQuote, provider="qmt", force_update=True, drop_duplicates=False)
+        Stock1mQuote.df_to_db(df, provider="qmt", force_update=True, drop_duplicates=False)
 
         # 日线行情
         if stock_finished:
@@ -319,7 +319,7 @@ def tick_to_quote(entity_df):
                 lambda se: "{}_{}".format(se["entity_id"], to_date_time_str(se["timestamp"])), axis=1
             )
             df["level"] = "1d"
-            df_to_db(df=df, data_schema=Stock1dKdata, provider="em", force_update=True, drop_duplicates=False)
+            Stock1dKdata.df_to_db(df, provider="em", force_update=True, drop_duplicates=False)
 
         cost_time = time.time() - start_time
         logger.info(f"Quotes cost_time:{cost_time} for {len(datas.keys())} stocks")

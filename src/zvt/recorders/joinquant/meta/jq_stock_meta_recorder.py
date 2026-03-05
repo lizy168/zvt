@@ -4,7 +4,7 @@ from jqdatapy.api import get_all_securities, run_query
 
 from zvt.api.portfolio import portfolio_relate_stock
 from zvt.api.utils import china_stock_code_to_id
-from zvt.contract.api import df_to_db, get_entity_exchange, get_entity_code
+from zvt.contract.api import get_entity_exchange, get_entity_code
 from zvt.contract.recorder import Recorder, TimeSeriesDataRecorder
 from zvt.domain import EtfStock, Stock, Etf, StockDetail
 from zvt.recorders.joinquant.common import to_entity_id, jq_to_report_period
@@ -47,9 +47,9 @@ class JqChinaStockRecorder(BaseJqChinaMetaRecorder):
     def run(self):
         # 抓取股票列表
         df_stock = self.to_zvt_entity(get_all_securities(code="stock"), entity_type="stock")
-        df_to_db(df_stock, data_schema=Stock, provider=self.provider, force_update=self.force_update)
+        Stock.df_to_db(df_stock, provider=self.provider, force_update=self.force_update)
         # persist StockDetail too
-        df_to_db(df=df_stock, data_schema=StockDetail, provider=self.provider, force_update=self.force_update)
+        StockDetail.df_to_db(df_stock, provider=self.provider, force_update=self.force_update)
 
         # self.logger.info(df_stock)
         self.logger.info("persist stock list success")
@@ -61,7 +61,7 @@ class JqChinaEtfRecorder(BaseJqChinaMetaRecorder):
     def run(self):
         # 抓取etf列表
         df_index = self.to_zvt_entity(get_all_securities(code="etf"), entity_type="etf", category="etf")
-        df_to_db(df_index, data_schema=Etf, provider=self.provider, force_update=self.force_update)
+        Etf.df_to_db(df_index, provider=self.provider, force_update=self.force_update)
 
         # self.logger.info(df_index)
         self.logger.info("persist etf list success")
@@ -100,7 +100,7 @@ class JqChinaStockEtfPortfolioRecorder(TimeSeriesDataRecorder):
             df["report_date"] = pd.to_datetime(df["period_end"])
             df["report_period"] = df["report_type"].apply(lambda x: jq_to_report_period(x))
 
-            df_to_db(df=df, data_schema=self.data_schema, provider=self.provider, force_update=self.force_update)
+            self.data_schema.df_to_db(df, provider=self.provider, force_update=self.force_update)
 
             # self.logger.info(df.tail())
             self.logger.info(f"persist etf {entity.code} portfolio success {df.iloc[-1]['pub_date']}")

@@ -6,7 +6,6 @@ import pandas as pd
 import requests
 
 from zvt.api.utils import china_stock_code_to_id
-from zvt.contract.api import df_to_db
 from zvt.contract.recorder import Recorder, TimeSeriesDataRecorder
 from zvt.domain import BlockStock, BlockCategory, Block
 from zvt.utils.time_utils import now_pd_timestamp
@@ -51,7 +50,7 @@ class SinaBlockRecorder(Recorder):
                 )
             if the_list:
                 df = pd.DataFrame.from_records(the_list)
-                df_to_db(data_schema=self.data_schema, df=df, provider=self.provider, force_update=True)
+                self.data_schema.df_to_db(df, provider=self.provider, force_update=True)
 
             self.logger.info(f"finish record sina blocks:{category.value}")
 
@@ -94,7 +93,7 @@ class SinaChinaBlockStockRecorder(TimeSeriesDataRecorder):
                     )
                 if the_list:
                     df = pd.DataFrame.from_records(the_list)
-                    df_to_db(data_schema=self.data_schema, df=df, provider=self.provider, force_update=True)
+                    self.data_schema.df_to_db(df, provider=self.provider, force_update=True)
 
                 self.logger.info("finish recording BlockStock:{},{}".format(entity.category, entity.name))
 

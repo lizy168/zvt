@@ -7,7 +7,7 @@ import sqlalchemy
 
 from zvt.api.kdata import get_kdata_schema
 from zvt.contract import AdjustType, IntervalLevel
-from zvt.contract.api import df_to_db, get_db_session
+from zvt.contract.api import get_db_session
 from zvt.domain.quotes import KdataCommon
 from zvt.factors.top_stocks import TopStocks, get_top_stocks
 from zvt.tag.common import InsertMode
@@ -184,10 +184,9 @@ def build_stock_pool_tag_stats(
         sorted_df["id"] = sorted_df[["entity_id", "timestamp", "main_tag"]].apply(
             lambda x: "_".join(x.astype(str)), axis=1
         )
-        df_to_db(
+        TagStats.df_to_db(
+            sorted_df,
             provider="zvt",
-            df=sorted_df,
-            data_schema=TagStats,
             force_update=True,
             dtype={"entity_ids": sqlalchemy.JSON},
         )

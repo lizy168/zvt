@@ -1,7 +1,6 @@
 import pandas as pd
 from jqdatapy.api import run_query
 
-from zvt.contract.api import df_to_db, get_data
 from zvt.contract.recorder import TimestampsDataRecorder
 from zvt.domain import Index
 from zvt.domain.misc.holder import HkHolder
@@ -62,10 +61,9 @@ class JoinquantHkHolderRecorder(TimestampsDataRecorder):
     def get_latest_saved_record(self, entity):
         order = eval("self.data_schema.{}.desc()".format(self.get_evaluated_time_field()))
 
-        records = get_data(
+        records = self.data_schema.query_data(
             filters=[HkHolder.holder_code == entity.code],
             provider=self.provider,
-            data_schema=self.data_schema,
             order=order,
             limit=1,
             return_type="domain",
@@ -100,7 +98,7 @@ class JoinquantHkHolderRecorder(TimestampsDataRecorder):
                     axis=1,
                 )
 
-                df_to_db(df=df, data_schema=self.data_schema, provider=self.provider, force_update=self.force_update)
+                self.data_schema.df_to_db(df, provider=self.provider, force_update=self.force_update)
 
 
 if __name__ == "__main__":

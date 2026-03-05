@@ -290,8 +290,8 @@ def cal_tag_quote_stats(stock_pool_name):
 
     print(grouped_df)
 
-    contract_api.df_to_db(
-        df=grouped_df, data_schema=TagQuoteStats, provider="zvt", force_update=True, drop_duplicates=False
+    TagQuoteStats.df_to_db(
+        grouped_df, provider="zvt", force_update=True, drop_duplicates=False
     )
 
 

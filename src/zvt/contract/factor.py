@@ -9,7 +9,6 @@ import pandas as pd
 
 from zvt.contract import IntervalLevel
 from zvt.contract import zvt_context
-from zvt.contract.api import get_data, df_to_db, del_data
 from zvt.contract.base_service import EntityStateService
 from zvt.contract.reader import DataReader, DataListener
 from zvt.contract.schema import Mixin, TradableEntity
@@ -312,9 +311,8 @@ class Factor(DataReader, EntityStateService, DataListener):
             if pd_is_not_null(self.data_df) and self.computing_window:
                 dfs = []
                 for entity_id, df in self.data_df.groupby(level=0):
-                    latest_laved = get_data(
+                    latest_laved = self.factor_schema.query_data(
                         provider="zvt",
-                        data_schema=self.factor_schema,
                         entity_id=entity_id,
                         order=self.factor_schema.timestamp.desc(),
                         limit=1,
@@ -349,9 +347,8 @@ class Factor(DataReader, EntityStateService, DataListener):
                     provider="zvt", data_schema=self.factor_schema, window=self.accumulator.acc_window
                 )
         else:
-            self.factor_df = get_data(
+            self.factor_df = self.factor_schema.query_data(
                 provider="zvt",
-                data_schema=self.factor_schema,
                 start_timestamp=self.start_timestamp,
                 entity_ids=self.entity_ids,
                 end_timestamp=self.end_timestamp,
@@ -379,9 +376,9 @@ class Factor(DataReader, EntityStateService, DataListener):
     def clear_state_data(self, entity_id=None):
         super().clear_state_data(entity_id=entity_id)
         if entity_id:
-            del_data(self.factor_schema, filters=[self.factor_schema.entity_id == entity_id], provider="zvt")
+            self.factor_schema.del_data(filters=[self.factor_schema.entity_id == entity_id], provider="zvt")
         else:
-            del_data(self.factor_schema, provider="zvt")
+            self.factor_schema.del_data(provider="zvt")
 
     def pre_compute(self):
         if not self.only_load_factor and not pd_is_not_null(self.pipe_df):
@@ -535,9 +532,8 @@ class Factor(DataReader, EntityStateService, DataListener):
                 self.data_df = pd.concat([self.data_df, new_data_df], sort=False)
                 self.data_df.sort_index(level=[0, 1], inplace=True)
 
-            new_factor_df = get_data(
+            new_factor_df = self.factor_schema.query_data(
                 provider="zvt",
-                data_schema=self.factor_schema,
                 start_timestamp=self.start_timestamp,
                 entity_ids=new_entity_ids,
                 end_timestamp=self.end_timestamp,
@@ -584,8 +580,8 @@ class Factor(DataReader, EntityStateService, DataListener):
                     if state:
                         self.persist_state(entity_id=entity_id)
                     if entity_id in g.groups:
-                        df_to_db(
-                            df=df.loc[(entity_id,)], data_schema=self.factor_schema, provider="zvt", force_update=False
+                        self.factor_schema.df_to_db(
+                            df.loc[(entity_id,)], provider="zvt", force_update=False
                         )
                 except Exception as e:
                     self.logger.error(f"{self.name} {entity_id} save state error")
@@ -593,7 +589,7 @@ class Factor(DataReader, EntityStateService, DataListener):
                     #: clear them if error happen
                     self.clear_state_data(entity_id)
         else:
-            df_to_db(df=df, data_schema=self.factor_schema, provider="zvt", force_update=False)
+            self.factor_schema.df_to_db(df, provider="zvt", force_update=False)
 
     def get_filter_df(self):
         if is_filter_result_df(self.result_df):

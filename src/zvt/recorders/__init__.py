@@ -53,14 +53,13 @@ CHINA_STOCK_MAIN_INDEX = [
 def init_main_index(provider="exchange"):
     from zvt.utils.time_utils import to_pd_timestamp
     import pandas as pd
-    from zvt.contract.api import df_to_db
     from zvt.domain.meta import Index
 
     for item in CHINA_STOCK_MAIN_INDEX:
         item["timestamp"] = to_pd_timestamp(item["timestamp"])
     df = pd.DataFrame(CHINA_STOCK_MAIN_INDEX)
     # print(df)
-    df_to_db(df=df, data_schema=Index, provider=provider, force_update=False)
+    Index.df_to_db(df, provider=provider, force_update=False)
 
 
 # the __all__ is generated

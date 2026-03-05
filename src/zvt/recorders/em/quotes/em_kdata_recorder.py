@@ -3,7 +3,6 @@
 from zvt.api.kdata import get_kdata_schema, get_kdata
 from zvt.api.selector import get_entity_ids_by_filter
 from zvt.contract import IntervalLevel, AdjustType
-from zvt.contract.api import df_to_db
 from zvt.contract.recorder import FixedCycleDataRecorder
 from zvt.domain import (
     Stock,
@@ -129,7 +128,7 @@ class BaseEMStockKdataRecorder(FixedCycleDataRecorder):
 
         delisted = False
         if pd_is_not_null(df):
-            df_to_db(df=df, data_schema=self.data_schema, provider=self.provider, force_update=self.force_update)
+            self.data_schema.df_to_db(df, provider=self.provider, force_update=self.force_update)
             latest_timestamp = df.iloc[-1, :]["timestamp"]
             days = count_interval(latest_timestamp, now_pd_timestamp())
             if days > 200:

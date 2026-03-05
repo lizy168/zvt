@@ -3,7 +3,6 @@
 import pandas as pd
 from jqdatapy.api import get_mtss
 
-from zvt.contract.api import df_to_db
 from zvt.contract.recorder import TimeSeriesDataRecorder
 from zvt.domain import Stock, MarginTrading
 from zvt.recorders.joinquant.common import to_jq_entity_id
@@ -34,7 +33,7 @@ class MarginTradingRecorder(TimeSeriesDataRecorder):
             )
 
             print(df)
-            df_to_db(df=df, data_schema=self.data_schema, provider=self.provider, force_update=self.force_update)
+            self.data_schema.df_to_db(df, provider=self.provider, force_update=self.force_update)
 
         return None
 

@@ -9,8 +9,8 @@ import requests
 from sqlalchemy.orm import Session
 
 from zvt.contract import IntervalLevel
-from zvt.contract.api import get_db_session, get_schema_columns
-from zvt.contract.api import get_entities, get_data
+from zvt.contract.api import get_db_session
+from zvt.contract.api import get_entities
 from zvt.contract.base_service import OneStateService
 from zvt.contract.schema import Mixin, TradableEntity
 from zvt.contract.utils import is_in_same_interval, evaluate_size_from_timestamp
@@ -287,10 +287,9 @@ class TimeSeriesDataRecorder(EntityEventRecorder):
     def get_latest_saved_record(self, entity):
         order = eval("self.data_schema.{}.desc()".format(self.get_evaluated_time_field()))
 
-        records = get_data(
+        records = self.data_schema.query_data(
             entity_id=entity.id,
             provider=self.provider,
-            data_schema=self.data_schema,
             order=order,
             limit=1,
             return_type="domain",
@@ -396,8 +395,7 @@ class TimeSeriesDataRecorder(EntityEventRecorder):
         #: optional way
         #: item = self.session.query(self.data_schema).get(the_id)
 
-        items = get_data(
-            data_schema=self.data_schema,
+        items = self.data_schema.query_data(
             session=self.session,
             provider=self.provider,
             entity_id=entity.id,
@@ -417,7 +415,7 @@ class TimeSeriesDataRecorder(EntityEventRecorder):
             except Exception as e:
                 self.logger.exception(e)
 
-            if "name" in get_schema_columns(self.data_schema):
+            if "name" in self.data_schema.get_columns():
                 domain_item = self.data_schema(
                     id=the_id, code=entity.code, name=entity.name, entity_id=entity.id, timestamp=timestamp
                 )
@@ -658,10 +656,9 @@ class FixedCycleDataRecorder(TimeSeriesDataRecorder):
 
         #: 对于k线这种数据，最后一个记录有可能是没完成的，所以取两个
         #: 同一周期内只保留最新的一个数据
-        records = get_data(
+        records = self.data_schema.query_data(
             entity_id=entity.id,
             provider=self.provider,
-            data_schema=self.data_schema,
             order=order,
             limit=2,
             return_type="domain",

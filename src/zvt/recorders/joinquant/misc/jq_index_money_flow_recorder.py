@@ -2,7 +2,6 @@
 import pandas as pd
 
 from zvt.contract import IntervalLevel
-from zvt.contract.api import df_to_db
 from zvt.contract.recorder import FixedCycleDataRecorder
 from zvt.domain import IndexMoneyFlow, Index, StockMoneyFlow
 from zvt.utils.pd_utils import pd_is_not_null
@@ -120,8 +119,8 @@ class JoinquantIndexMoneyFlowRecorder(FixedCycleDataRecorder):
 
                 self.logger.info(index_df)
 
-                df_to_db(
-                    df=index_df, data_schema=self.data_schema, provider=self.provider, force_update=self.force_update
+                self.data_schema.df_to_db(
+                    index_df, provider=self.provider, force_update=self.force_update
                 )
 
         return None

@@ -22,7 +22,7 @@ from zvt.contract import (
     get_entity_exchanges,
     tradable_type_map_exchanges,
 )
-from zvt.contract.api import decode_entity_id, df_to_db
+from zvt.contract.api import decode_entity_id
 from zvt.domain import BlockCategory, StockHotTopic
 from zvt.recorders.consts import DEFAULT_HEADER
 from zvt.utils.time_utils import (
@@ -973,8 +973,8 @@ def record_hot_topic():
     logger.debug(hot_topics)
     if hot_topics:
         df = pd.DataFrame.from_records(hot_topics)
-        df_to_db(
-            df=df, data_schema=StockHotTopic, provider="em", force_update=True, dtype={"entity_ids": sqlalchemy.JSON}
+        StockHotTopic.df_to_db(
+            df, provider="em", force_update=True, dtype={"entity_ids": sqlalchemy.JSON}
         )
 
 

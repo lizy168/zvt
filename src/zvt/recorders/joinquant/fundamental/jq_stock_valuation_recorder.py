@@ -4,7 +4,6 @@ import pandas as pd
 from jqdatapy.api import get_fundamentals
 from pandas._libs.tslibs.timedeltas import Timedelta
 
-from zvt.contract.api import df_to_db
 from zvt.contract.recorder import TimeSeriesDataRecorder
 from zvt.domain import Stock, StockValuation, Etf
 from zvt.recorders.joinquant.common import to_jq_entity_id
@@ -45,7 +44,7 @@ class JqChinaStockValuationRecorder(TimeSeriesDataRecorder):
         df["capitalization"] = df["capitalization"] * 10000
         df["circulating_cap"] = df["circulating_cap"] * 10000
         df["turnover_ratio"] = df["turnover_ratio"] * 0.01
-        df_to_db(df=df, data_schema=self.data_schema, provider=self.provider, force_update=self.force_update)
+        self.data_schema.df_to_db(df, provider=self.provider, force_update=self.force_update)
 
         return None
 
