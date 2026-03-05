@@ -17,7 +17,7 @@ from zvt.api.selector import (
 )
 from zvt.api.stats import get_top_performance_entities_by_periods, TopType
 from zvt.contract import Mixin, AdjustType
-from zvt.contract.api import get_db_session
+from zvt.contract.schema import get_db_session
 from zvt.contract.factor import TargetType
 from zvt.contract.register import register_schema
 from zvt.domain import Stock

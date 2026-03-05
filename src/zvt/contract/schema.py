@@ -1,20 +1,27 @@
 # -*- coding: utf-8 -*-
+import contextlib
 import inspect
 import json
 import logging
 import platform
 from datetime import timedelta
-from typing import Dict, List, Union
+from typing import Dict, List, Union, Generator
 
 import pandas as pd
 import pkg_resources
 from sqlalchemy import Column, String, DateTime, Float, func, exists, and_
-from sqlalchemy.orm import Session, Query
+from sqlalchemy.engine import Engine
+from sqlalchemy.ext.declarative import DeclarativeMeta
+from sqlalchemy.orm import Session, Query, sessionmaker
 from sqlalchemy.sql.expression import text
 
 from zvt.contract import IntervalLevel
 
 logger = logging.getLogger(__name__)
+
+# Session/engine state (used by get_db_engine, get_db_session, db_session_scope)
+_initialized_storage_ids = set()
+_bound_session_factories: dict = {}
 
 
 def _get_schema_providers() -> Dict[str, List[str]]:
@@ -108,6 +115,116 @@ def get_schema_by_name(name: str):
     for schema in zvt_context.schemas:
         if schema.__name__ == name:
             return schema
+
+
+def _get_db_name(data_schema: DeclarativeMeta) -> str:
+    """Resolve db name for a schema from zvt_context.dbname_map_base."""
+    from zvt.contract import zvt_context
+
+    for db_name, base in zvt_context.dbname_map_base.items():
+        if issubclass(data_schema, base):
+            return db_name
+
+
+def _storage_backend():
+    from zvt.contract import zvt_context
+    from zvt.contract.storage import get_storage_backend
+
+    return zvt_context.storage_backend or get_storage_backend()
+
+
+def _route_registry():
+    from zvt.contract import zvt_context
+    from zvt.contract.route_registry import get_route_registry
+
+    return zvt_context.route_registry or get_route_registry()
+
+
+def get_db_engine(
+    provider: str, db_name: str = None, data_schema: object = None, data_path: str = None
+) -> Engine:
+    """
+    Get db engine from (provider, db_name) or (provider, data_schema).
+    Creates tables and indexes on first use (lazy init).
+    """
+    from zvt import zvt_env
+    from zvt.contract import zvt_context
+    from zvt.contract.register import ensure_schema_tables_and_indexes
+
+    if data_schema:
+        db_name = _get_db_name(data_schema=data_schema)
+    if data_path is None:
+        data_path = zvt_env.get("data_path", ".")
+    storage_id = _route_registry().get_storage_id(provider, db_name)
+    engine = _storage_backend().get_engine(storage_id, data_path)
+    if storage_id not in _initialized_storage_ids:
+        schema_base = zvt_context.dbname_map_base.get(db_name)
+        if schema_base:
+            ensure_schema_tables_and_indexes(engine, schema_base, db_name)
+        _initialized_storage_ids.add(storage_id)
+    return engine
+
+
+def _get_bound_session_factory(
+    provider: str, db_name: str = None, data_schema: object = None
+):
+    """Get or create a sessionmaker bound to engine, cached by storage_id."""
+    _ensure_schema_providers_loaded()
+    if data_schema:
+        db_name = _get_db_name(data_schema=data_schema)
+    storage_id = _route_registry().get_storage_id(provider, db_name)
+    if storage_id not in _bound_session_factories:
+        engine = get_db_engine(provider=provider, db_name=db_name)
+        _bound_session_factories[storage_id] = sessionmaker(
+            bind=engine, autocommit=False, autoflush=True
+        )
+    return _bound_session_factories[storage_id]
+
+
+def get_db_session(
+    provider: str, db_name: str = None, data_schema: object = None
+) -> Session:
+    """
+    Get a new db session for (provider, db_name) or (provider, data_schema).
+    Caller is responsible for closing the session when done.
+    Use db_session_scope() for automatic commit/rollback/close.
+    """
+    session_fac = _get_bound_session_factory(
+        provider=provider, db_name=db_name, data_schema=data_schema
+    )
+    return session_fac()
+
+
+@contextlib.contextmanager
+def db_session_scope(
+    provider: str, db_name: str = None, data_schema: object = None
+) -> Generator[Session, None, None]:
+    """
+    Context manager for db session. Commits on success, rolls back on exception,
+    and always closes the session.
+    """
+    session = get_db_session(provider=provider, db_name=db_name, data_schema=data_schema)
+    try:
+        yield session
+        session.commit()
+    except Exception:
+        session.rollback()
+        raise
+    finally:
+        session.close()
+
+
+def close_all_sessions() -> None:
+    """Close all sessions stored in zvt_context.sessions."""
+    from zvt.contract import zvt_context
+
+    for key, session in list(zvt_context.sessions.items()):
+        try:
+            session.close()
+        except Exception:
+            logger.exception("Error closing session %s", key)
+        finally:
+            del zvt_context.sessions[key]
 
 
 class Mixin(object):
@@ -207,7 +324,6 @@ class Mixin(object):
     @classmethod
     def get_data_count(cls, filters=None, provider=None, session: Session = None):
         """Get record count for this schema with optional filters."""
-        from .api import db_session_scope
 
         def _count(sess):
             query = sess.query(cls)
@@ -226,7 +342,6 @@ class Mixin(object):
     @classmethod
     def del_data(cls, filters=None, provider=None):
         """Delete records matching filters."""
-        from .api import db_session_scope
 
         provider = provider or cls.get_providers()[0]
         with db_session_scope(provider=provider, data_schema=cls) as session:
@@ -239,7 +354,7 @@ class Mixin(object):
     @classmethod
     def get_columns(cls) -> List[str]:
         """Return column names of this schema's table."""
-        return get_schema_columns(cls)
+        return list(cls.__table__.columns.keys())
 
     @classmethod
     def df_to_db(
@@ -254,7 +369,6 @@ class Mixin(object):
         need_check: bool = True,
     ):
         """Store the DataFrame to this schema's table."""
-        from .api import db_session_scope
         from zvt.utils.pd_utils import pd_is_not_null
 
         if not pd_is_not_null(df):
@@ -353,7 +467,6 @@ class Mixin(object):
         :param time_field:
         :return: results basing on return_type.
         """
-        from .api import db_session_scope
         from zvt.utils.pd_utils import pd_is_not_null, index_df
 
         _ensure_schema_providers_loaded()
@@ -447,8 +560,6 @@ class Mixin(object):
             providers = cls.get_providers()
         else:
             providers = [provider]
-        from zvt.contract.api import get_db_engine
-
         engines = []
         for p in providers:
             engines.append(get_db_engine(provider=p, data_schema=cls))
@@ -878,4 +989,8 @@ __all__ = [
     "ActorMeetTradable",
     "get_schema_by_name",
     "get_schema_columns",
+    "get_db_engine",
+    "get_db_session",
+    "db_session_scope",
+    "close_all_sessions",
 ]

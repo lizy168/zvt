@@ -10,7 +10,7 @@ from zvt.api.kdata import get_kdata_schema, default_adjust_type, get_latest_kdat
 from zvt.api.selector import get_entity_ids_by_filter
 from zvt.api.utils import get_recent_report_date
 from zvt.contract import Mixin, AdjustType
-from zvt.contract.api import decode_entity_id, get_entity_schema, get_entity_ids
+from zvt.contract.entity import decode_entity_id, get_entity_schema, get_entity_ids
 from zvt.contract.drawer import Drawer
 from zvt.domain import FundStock, StockValuation, BlockStock, Block
 from zvt.utils.pd_utils import pd_is_not_null

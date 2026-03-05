@@ -7,7 +7,7 @@ from apscheduler.schedulers.background import BackgroundScheduler
 from examples.factors.fundamental_selector import FundamentalSelector
 from examples.reports import get_subscriber_emails, stocks_with_info
 from zvt import init_log, zvt_config
-from zvt.contract.api import get_entities
+from zvt.contract.entity import get_entities
 from zvt.domain import Stock
 from zvt.factors.target_selector import TargetSelector
 from zvt.informer.inform_utils import add_to_eastmoney

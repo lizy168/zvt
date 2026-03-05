@@ -7,7 +7,7 @@ from zvt import zvt_config, init_log
 from zvt.api.kdata import get_latest_kdata_date, get_kdata_schema
 from zvt.api.selector import get_entity_ids_by_filter
 from zvt.contract import AdjustType
-from zvt.contract.api import get_entity_ids
+from zvt.contract.entity import get_entity_ids
 from zvt.domain import (
     Stock,
     Block,

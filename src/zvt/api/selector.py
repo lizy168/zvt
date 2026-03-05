@@ -6,7 +6,7 @@ from sqlalchemy import or_, and_
 
 from zvt.api.kdata import default_adjust_type, get_kdata_schema, get_latest_kdata_date, get_recent_trade_dates
 from zvt.contract import IntervalLevel, AdjustType
-from zvt.contract.api import get_entity_ids, get_entity_schema
+from zvt.contract.entity import get_entity_ids, get_entity_schema
 from zvt.domain import DragonAndTiger, Stock1dHfqKdata, Stock, LimitUpInfo, StockQuote, Stock1mQuote
 from zvt.utils.pd_utils import pd_is_not_null
 from zvt.utils.time_utils import (

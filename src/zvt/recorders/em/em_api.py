@@ -22,7 +22,7 @@ from zvt.contract import (
     get_entity_exchanges,
     tradable_type_map_exchanges,
 )
-from zvt.contract.api import decode_entity_id
+from zvt.contract.entity import decode_entity_id
 from zvt.domain import BlockCategory, StockHotTopic
 from zvt.recorders.consts import DEFAULT_HEADER
 from zvt.utils.time_utils import (

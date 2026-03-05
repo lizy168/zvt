@@ -6,7 +6,7 @@ import pandas as pd
 
 from zvt.api.utils import get_recent_report_date
 from zvt.contract import PortfolioStockHistory
-from zvt.contract.api import get_schema_by_name
+from zvt.contract.schema import get_schema_by_name
 from zvt.domain import ReportPeriod, Fund, Etf
 from zvt.utils.time_utils import to_pd_timestamp, now_pd_timestamp
 

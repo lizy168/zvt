@@ -12,3 +12,4 @@ alwaysApply: true
   - 通过 HTTP 调用的接口无需改 zvt_vip（由 FastAPI 注入 session）。
   - **在 zvt_vip 里直接调用** 的接口（如 `query_simple_stock_tags`、`batch_set_stock_tags`）应改为调用 **tag_service** 等带 `session=None` 的入口，而不是直接调用 `rest.work` 的路由函数。
 - 与主仓一致的约定：优先使用 **`db_session_scope`** 而非 `DBSession(...)()`；若主仓对某模块做了 **Depends(get_xxx_session)**，zvt_vip 中调用该模块时传 **session=None** 即可由该模块内部自行开 session。
+- **DB 会话/引擎**：`get_db_engine`、`get_db_session`、`db_session_scope`、`close_all_sessions` 定义在 **`zvt.contract.schema`**，应从 `from zvt.contract.schema import ...` 引入，不要从 `contract.api` 引入。

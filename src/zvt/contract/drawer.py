@@ -8,7 +8,7 @@ import pandas as pd
 import plotly.graph_objs as go
 from plotly.subplots import make_subplots
 
-from zvt.contract.api import decode_entity_id
+from zvt.contract.entity import decode_entity_id
 from zvt.contract.data_type import Bean
 from zvt.contract.normal_data import NormalData
 from zvt.utils.decorator import to_string

@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-from zvt.contract.api import get_entities
+from zvt.contract.entity import get_entities
 from zvt.utils.utils import iterate_with_step, to_str, float_to_pct
 
 

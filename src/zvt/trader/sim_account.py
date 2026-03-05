@@ -5,7 +5,8 @@ from typing import List, Optional
 
 from zvt.api.kdata import get_kdata, get_kdata_schema
 from zvt.contract import IntervalLevel, TradableEntity, AdjustType
-from zvt.contract.api import get_db_session, decode_entity_id
+from zvt.contract.entity import decode_entity_id
+from zvt.contract.schema import get_db_session
 from zvt.trader import TradingSignal, AccountService, OrderType, trading_signal_type_to_order_type
 from zvt.trader.errors import (
     NotEnoughMoneyError,

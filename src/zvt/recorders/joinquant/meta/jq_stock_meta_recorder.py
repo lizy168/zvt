@@ -4,7 +4,7 @@ from jqdatapy.api import get_all_securities, run_query
 
 from zvt.api.portfolio import portfolio_relate_stock
 from zvt.api.utils import china_stock_code_to_id
-from zvt.contract.api import get_entity_exchange, get_entity_code
+from zvt.contract.entity import get_entity_exchange, get_entity_code
 from zvt.contract.recorder import Recorder, TimeSeriesDataRecorder
 from zvt.domain import EtfStock, Stock, Etf, StockDetail
 from zvt.recorders.joinquant.common import to_entity_id, jq_to_report_period

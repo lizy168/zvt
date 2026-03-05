@@ -4,8 +4,8 @@ from typing import List, Optional
 from fastapi import APIRouter, HTTPException
 from fastapi_pagination import Page
 
-import zvt.contract.api as contract_api
 import zvt.trading.trading_service as trading_service
+from zvt.contract.schema import db_session_scope
 from zvt.common.trading_models import BuyParameter, SellParameter, TradingResult
 from zvt.tag.tag_schemas import MainTagInfo
 from zvt.trading.trading_models import (
@@ -51,7 +51,7 @@ def get_quote_stats():
 
 @trading_router.get("/get_query_stock_quote_setting", response_model=Optional[QueryStockQuoteSettingModel])
 def get_query_stock_quote_setting():
-    with contract_api.db_session_scope(provider="zvt", data_schema=QueryStockQuoteSetting) as session:
+    with db_session_scope(provider="zvt", data_schema=QueryStockQuoteSetting) as session:
         query_setting: List[dict] = QueryStockQuoteSetting.query_data(
             session=session, return_type="dict"
         )

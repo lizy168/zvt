@@ -4,7 +4,7 @@ from typing import List, Union
 import pandas as pd
 
 from zvt.contract import IntervalLevel
-from zvt.contract.api import get_db_session
+from zvt.contract.schema import get_db_session
 from zvt.contract.drawer import Drawer
 from zvt.contract.normal_data import NormalData
 from zvt.contract.reader import DataReader

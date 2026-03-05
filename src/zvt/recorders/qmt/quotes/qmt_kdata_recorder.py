@@ -4,7 +4,8 @@ import pandas as pd
 from zvt.api.kdata import get_kdata_schema, get_kdata
 from zvt.broker.qmt import qmt_quote
 from zvt.contract import IntervalLevel, AdjustType
-from zvt.contract.api import get_db_session, get_entities
+from zvt.contract.entity import get_entities
+from zvt.contract.schema import get_db_session
 from zvt.contract.recorder import FixedCycleDataRecorder
 from zvt.domain import (
     Stock,

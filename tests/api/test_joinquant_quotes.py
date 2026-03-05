@@ -1,6 +1,6 @@
 from zvt.api.kdata import get_kdata
 from zvt.contract import IntervalLevel
-from zvt.contract.api import get_db_session
+from zvt.contract.schema import get_db_session
 from ..context import init_test_context
 
 init_test_context()

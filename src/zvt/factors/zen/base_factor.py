@@ -10,7 +10,7 @@ import pandas as pd
 
 from zvt.contract import IntervalLevel, AdjustType
 from zvt.contract import TradableEntity
-from zvt.contract.api import get_schema_by_name
+from zvt.contract.schema import get_schema_by_name
 from zvt.contract.data_type import Bean
 from zvt.contract.drawer import Rect
 from zvt.contract.factor import Accumulator

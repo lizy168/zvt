@@ -9,8 +9,8 @@ import requests
 from sqlalchemy.orm import Session
 
 from zvt.contract import IntervalLevel
-from zvt.contract.api import get_db_session
-from zvt.contract.api import get_entities
+from zvt.contract.schema import get_db_session
+from zvt.contract.entity import get_entities
 from zvt.contract.base_service import OneStateService
 from zvt.contract.schema import Mixin, TradableEntity
 from zvt.contract.utils import is_in_same_interval, evaluate_size_from_timestamp

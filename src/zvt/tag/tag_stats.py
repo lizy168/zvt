@@ -7,7 +7,7 @@ import sqlalchemy
 
 from zvt.api.kdata import get_kdata_schema
 from zvt.contract import AdjustType, IntervalLevel
-from zvt.contract.api import get_db_session
+from zvt.contract.schema import get_db_session
 from zvt.domain.quotes import KdataCommon
 from zvt.factors.top_stocks import TopStocks, get_top_stocks
 from zvt.tag.common import InsertMode

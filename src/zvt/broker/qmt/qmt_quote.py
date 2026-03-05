@@ -8,7 +8,8 @@ from xtquant import xtdata
 from zvt.api.kdata import get_recent_trade_dates
 from zvt.api.selector import get_entity_ids_by_filter
 from zvt.contract import IntervalLevel, AdjustType
-from zvt.contract.api import decode_entity_id, get_db_session
+from zvt.contract.entity import decode_entity_id
+from zvt.contract.schema import get_db_session
 from zvt.domain import StockQuote, Stock, Stock1dKdata, StockQuoteLog, Stock1mQuote
 from zvt.utils.pd_utils import pd_is_not_null
 from zvt.utils.time_utils import (

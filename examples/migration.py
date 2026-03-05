@@ -6,7 +6,7 @@ from pydantic import BaseModel, ConfigDict
 from sqlalchemy import Column, String, JSON
 from sqlalchemy.orm import declarative_base
 
-from zvt.contract.api import get_db_session
+from zvt.contract.schema import get_db_session
 from zvt.contract.register import register_schema
 from zvt.contract.schema import Mixin
 

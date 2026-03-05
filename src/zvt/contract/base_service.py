@@ -2,7 +2,7 @@
 import json
 from typing import Type, List
 
-from zvt.contract.api import get_db_session
+from zvt.contract.schema import get_db_session
 from zvt.contract.zvt_info import StateMixin
 from zvt.utils.str_utils import to_snake_str
 

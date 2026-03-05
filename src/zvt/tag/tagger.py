@@ -4,7 +4,7 @@ from typing import Type
 
 from zvt.contract import Mixin
 from zvt.contract import TradableEntity
-from zvt.contract.api import get_db_session
+from zvt.contract.schema import get_db_session
 from zvt.contract.base_service import OneStateService
 from zvt.contract.zvt_info import TaggerState
 from zvt.domain import Stock

@@ -4,7 +4,7 @@ from typing import List
 import pandas as pd
 
 from zvt.api.kdata import get_kdata_schema
-from zvt.contract.api import decode_entity_id
+from zvt.contract.entity import decode_entity_id
 from zvt.contract.drawer import Drawer, ChartType
 from zvt.utils.time_utils import to_pd_timestamp
 

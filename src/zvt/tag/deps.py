@@ -10,7 +10,7 @@ from typing import Generator
 
 from sqlalchemy.orm import Session
 
-import zvt.contract.api as contract_api
+from zvt.contract.schema import get_db_session
 from zvt.tag.tag_schemas import StockTags
 
 
@@ -19,7 +19,7 @@ def get_tag_db_session() -> Generator[Session, None, None]:
     FastAPI 依赖：为当前请求提供 tag 库的 DB session。
     请求结束时自动 commit（成功）或 rollback（异常），并关闭 session。
     """
-    session = contract_api.get_db_session(provider="zvt", data_schema=StockTags)
+    session = get_db_session(provider="zvt", data_schema=StockTags)
     try:
         yield session
         session.commit()

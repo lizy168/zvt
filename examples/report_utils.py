@@ -10,7 +10,7 @@ from zvt.api.kdata import get_latest_kdata_date, get_kdata_schema, default_adjus
 from zvt.api.selector import get_limit_up_stocks
 from zvt.api.stats import get_top_performance_entities_by_periods, get_top_volume_entities, TopType
 from zvt.contract import IntervalLevel
-from zvt.contract.api import get_entities, get_entity_schema
+from zvt.contract.entity import get_entities, get_entity_schema
 from zvt.contract.factor import Factor, TargetType
 from zvt.domain import StockNews
 from zvt.informer import EmailInformer

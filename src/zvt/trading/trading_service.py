@@ -7,8 +7,9 @@ from fastapi import HTTPException
 from fastapi_pagination.ext.sqlalchemy import paginate
 
 import zvt.api.kdata as kdata_api
-import zvt.contract.api as contract_api
 from zvt.common.query_models import TimeUnit
+from zvt.contract.entity import decode_entity_id
+from zvt.contract.schema import db_session_scope
 from zvt.domain import Stock, StockQuote, Stock1mQuote
 from zvt.domain.quotes.stockhk.stockhk_quote import StockhkQuote
 from zvt.domain.quotes.stockus.stockus_quote import StockusQuote
@@ -87,7 +88,7 @@ def query_ts(ts_request_model: TSRequestModel):
 
 
 def build_trading_plan(build_trading_plan_model: BuildTradingPlanModel):
-    with contract_api.db_session_scope(provider="zvt", data_schema=TradingPlan) as session:
+    with db_session_scope(provider="zvt", data_schema=TradingPlan) as session:
         stock_id = build_trading_plan_model.stock_id
         trading_date_str = to_date_time_str(build_trading_plan_model.trading_date)
         trading_date = to_pd_timestamp(trading_date_str)
@@ -125,7 +126,7 @@ def build_trading_plan(build_trading_plan_model: BuildTradingPlanModel):
 
 
 def query_trading_plan(query_trading_plan_model: QueryTradingPlanModel):
-    with contract_api.db_session_scope(provider="zvt", data_schema=TradingPlan) as session:
+    with db_session_scope(provider="zvt", data_schema=TradingPlan) as session:
         time_range = query_trading_plan_model.time_range
         if time_range.relative_time_range:
             start_timestamp = date_time_by_interval(
@@ -142,7 +143,7 @@ def query_trading_plan(query_trading_plan_model: QueryTradingPlanModel):
 
 
 def get_current_trading_plan():
-    with contract_api.db_session_scope(provider="zvt", data_schema=TradingPlan) as session:
+    with db_session_scope(provider="zvt", data_schema=TradingPlan) as session:
         return TradingPlan.query_data(
             session=session,
             filters=[TradingPlan.status == ExecutionStatus.pending.value],
@@ -152,7 +153,7 @@ def get_current_trading_plan():
 
 
 def get_future_trading_plan():
-    with contract_api.db_session_scope(provider="zvt", data_schema=TradingPlan) as session:
+    with db_session_scope(provider="zvt", data_schema=TradingPlan) as session:
         return TradingPlan.query_data(
             session=session,
             filters=[TradingPlan.status == ExecutionStatus.init.value],
@@ -162,7 +163,7 @@ def get_future_trading_plan():
 
 
 def check_trading_plan():
-    with contract_api.db_session_scope(provider="zvt", data_schema=TradingPlan) as session:
+    with db_session_scope(provider="zvt", data_schema=TradingPlan) as session:
         plans = TradingPlan.query_data(
             session=session,
             filters=[TradingPlan.status == ExecutionStatus.init.value, TradingPlan.trading_date == current_date()],
@@ -310,7 +311,7 @@ def query_tag_quotes(query_tag_quote_model: QueryTagQuoteModel):
     entity_type = "stock"
     if entity_ids:
         entity_id = entity_ids[0]
-        entity_type, _, _ = contract_api.decode_entity_id(entity_id)
+        entity_type, _, _ = decode_entity_id(entity_id)
 
     tag_df = StockTags.query_data(
         entity_ids=entity_ids,
@@ -378,7 +379,7 @@ def query_stock_quotes(query_stock_quote_model: QueryStockQuoteModel):
     entity_type = "stock"
     if entity_ids:
         entity_id = entity_ids[0]
-        entity_type, _, _ = contract_api.decode_entity_id(entity_id)
+        entity_type, _, _ = decode_entity_id(entity_id)
 
     if query_stock_quote_model.main_tag:
         tags_dict = StockTags.query_data(
@@ -460,7 +461,7 @@ def sell_stocks():
 
 
 def build_query_stock_quote_setting(build_query_stock_quote_setting_model: BuildQueryStockQuoteSettingModel):
-    with contract_api.db_session_scope(provider="zvt", data_schema=QueryStockQuoteSetting) as session:
+    with db_session_scope(provider="zvt", data_schema=QueryStockQuoteSetting) as session:
         the_id = "admin_setting"
         datas = QueryStockQuoteSetting.query_data(ids=[the_id], session=session, return_type="domain")
         if datas:

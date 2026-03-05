@@ -6,7 +6,7 @@ from typing import List, Union, Type, Optional
 import pandas as pd
 
 from zvt.contract import IntervalLevel
-from zvt.contract.api import get_entities
+from zvt.contract.entity import get_entities
 from zvt.contract.drawer import Drawable
 from zvt.contract.schema import Mixin, TradableEntity
 from zvt.utils.pd_utils import pd_is_not_null

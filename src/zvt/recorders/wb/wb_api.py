@@ -6,7 +6,7 @@ from copy import copy
 import pandas as pd
 import requests
 
-from zvt.contract.api import get_entity_code
+from zvt.contract.entity import get_entity_code
 from zvt.utils.pd_utils import normal_index_df
 from zvt.utils.time_utils import to_pd_timestamp
 

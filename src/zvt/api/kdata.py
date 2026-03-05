@@ -5,8 +5,8 @@ from typing import Union
 import numpy as np
 import pandas as pd
 
-from zvt.contract import IntervalLevel, AdjustType, Mixin
-from zvt.contract.api import decode_entity_id, get_schema_by_name
+from zvt.contract import IntervalLevel, AdjustType, Mixin, get_schema_by_name
+from zvt.contract.entity import decode_entity_id
 from zvt.domain import Index1dKdata, Indexus1dKdata, Indexhk1dKdata
 from zvt.utils.pd_utils import pd_is_not_null
 from zvt.utils.time_utils import (

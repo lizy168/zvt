@@ -4,7 +4,7 @@ from typing import List, Union, Type
 import pandas as pd
 
 from zvt.contract import IntervalLevel, TradableEntity, AdjustType
-from zvt.contract.api import get_schema_by_name
+from zvt.contract.schema import get_schema_by_name
 from zvt.contract.factor import Accumulator
 from zvt.contract.factor import Transformer
 from zvt.domain import Stock

@@ -7,9 +7,9 @@ from fastapi import HTTPException
 from sqlalchemy import func, text
 from sqlalchemy.orm import Session
 
-import zvt.contract.api as contract_api
 from zvt.api.selector import get_entity_ids_by_filter
-from zvt.contract.api import decode_entity_id
+from zvt.contract.schema import db_session_scope
+from zvt.contract.entity import decode_entity_id
 from zvt.domain import BlockStock, Block, Stock, Stockus, Stockhk
 from zvt.tag.common import TagType, TagStatsQueryType, StockPoolType, InsertMode
 from zvt.tag.tag_models import (
@@ -56,7 +56,7 @@ def _with_tag_session(session: Optional[Session], data_schema, fn):
     """有 session 时用传入的 session 执行 fn(session)（不 commit）；否则用 db_session_scope 执行并由 scope commit。"""
     if session is not None:
         return fn(session)
-    with contract_api.db_session_scope(provider=TAG_DB_PROVIDER, data_schema=data_schema) as sess:
+    with db_session_scope(provider=TAG_DB_PROVIDER, data_schema=data_schema) as sess:
         return fn(sess)
 
 
@@ -793,7 +793,7 @@ def refresh_main_tag_by_sub_tag(
 
 
 def refresh_all_main_tag_by_sub_tag():
-    with contract_api.db_session_scope(provider="zvt", data_schema=StockTags) as session:
+    with db_session_scope(provider="zvt", data_schema=StockTags) as session:
         stock_tags = StockTags.query_data(
             session=session,
             return_type="domain",

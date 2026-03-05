@@ -2,7 +2,7 @@
 
 import requests
 
-from zvt.contract.api import get_entities
+from zvt.contract.entity import get_entities
 from zvt.contract.recorder import Recorder
 from zvt.domain.meta.stock_meta import StockDetail, Stock
 from zvt.recorders.exchange.exchange_stock_meta_recorder import ExchangeStockMetaRecorder

@@ -3,7 +3,7 @@ import eastmoneypy
 import requests
 
 from zvt import zvt_config
-from zvt.contract.api import get_entities
+from zvt.contract.entity import get_entities
 from zvt.informer import EmailInformer
 
 
