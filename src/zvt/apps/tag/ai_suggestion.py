@@ -11,7 +11,7 @@ from sqlalchemy import func, or_
 from zvt import zvt_config
 from zvt.contract.schema import db_session_scope
 from zvt.domain import StockNews, Stock
-from zvt.tag.tag_utils import match_tag
+from zvt.apps.tag.tag_utils import match_tag
 from zvt.utils.time_utils import date_time_by_interval, current_date
 
 logger = logging.getLogger(__name__)

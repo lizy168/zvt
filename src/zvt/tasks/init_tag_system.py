@@ -1,13 +1,13 @@
 # -*- coding: utf-8 -*-
 from zvt.domain import Block, BlockStock, Stock
-from zvt.tag.tag_service import build_default_main_tag, build_default_sub_tags
-from zvt.tag.tag_utils import (
+from zvt.apps.tag.tag_service import build_default_main_tag, build_default_sub_tags
+from zvt.apps.tag.tag_utils import (
     build_initial_stock_pool_info,
     build_initial_main_tag_info,
     build_initial_sub_tag_info,
     build_initial_industry_info,
 )
-from zvt.trading.trading_service import build_default_query_stock_quote_setting
+from zvt.apps.trading.trading_service import build_default_query_stock_quote_setting
 
 if __name__ == "__main__":
     # init industry info

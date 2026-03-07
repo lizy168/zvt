@@ -13,9 +13,9 @@ from zvt.contract.schema import db_session_scope
 from zvt.domain import Stock, StockQuote, Stock1mQuote
 from zvt.domain.quotes.stockhk.stockhk_quote import StockhkQuote
 from zvt.domain.quotes.stockus.stockus_quote import StockusQuote
-from zvt.tag.tag_schemas import StockTags, StockPools, StockPoolInfo
-from zvt.trading.common import ExecutionStatus
-from zvt.trading.trading_models import (
+from zvt.apps.tag.tag_schemas import StockTags, StockPools, StockPoolInfo
+from zvt.apps.trading.common import ExecutionStatus
+from zvt.apps.trading.trading_models import (
     BuildTradingPlanModel,
     QueryTradingPlanModel,
     QueryTagQuoteModel,
@@ -24,7 +24,7 @@ from zvt.trading.trading_models import (
     KdataRequestModel,
     TSRequestModel,
 )
-from zvt.trading.trading_schemas import TradingPlan, QueryStockQuoteSetting, TagQuoteStats
+from zvt.apps.trading.trading_schemas import TradingPlan, QueryStockQuoteSetting, TagQuoteStats
 from zvt.utils.pd_utils import pd_is_not_null
 from zvt.utils.time_utils import (
     to_date_time_str,

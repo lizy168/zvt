@@ -8,20 +8,20 @@
 - Node.js（zvt_ui 前端）
 - 后端数据与配置依赖 `zvt-home`（如已配置）
 
-## 1. 后端（zvt_vip）
+## 1. 后端（zvt）
 
 在**项目根目录**执行：
 
 ```bash
 cd /path/to/zvt   # 进入 zvt 仓库根目录
-PYTHONPATH=src ./py312/bin/python -m uvicorn zvt_vip.server:app --host 0.0.0.0 --port 8090 --reload
+PYTHONPATH=src ./py312/bin/python -m uvicorn zvt.zvt_server:app --host 0.0.0.0 --port 8090 --reload
 ```
 
 - 后端地址：http://127.0.0.1:8090  
 - API 文档：http://127.0.0.1:8090/docs  
 - `--reload` 会监听代码变更并自动重启  
 
-> 本地调试使用 `src/zvt_vip/server.py`，已包含 work、trading、misc、event 等路由；data、factor 等已移除。
+> 后端入口为 `zvt.zvt_server:app`，已包含 work、trading、misc 等路由。
 
 ## 2. 前端（zvt_ui）
 

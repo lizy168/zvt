@@ -11,9 +11,9 @@ from zvt.api.selector import get_top_up_today, get_top_down_today, get_top_vol
 from zvt.domain import Stock
 from zvt.informer.inform_utils import add_to_eastmoney
 from zvt.recorders.em.em_api import record_hot_topic
-from zvt.tag.common import InsertMode
-from zvt.tag.tag_schemas import StockPools
-from zvt.tag.tag_stats import refresh_stock_pool
+from zvt.apps.tag.common import InsertMode
+from zvt.apps.tag.tag_schemas import StockPools
+from zvt.apps.tag.tag_stats import refresh_stock_pool
 from zvt.utils.time_utils import now_pd_timestamp, current_date
 
 logger = logging.getLogger(__name__)

@@ -11,8 +11,8 @@ from zvt.api.selector import get_entity_ids_by_filter
 from zvt.contract.schema import db_session_scope
 from zvt.contract.entity import decode_entity_id
 from zvt.domain import BlockStock, Block, Stock, Stockus, Stockhk
-from zvt.tag.common import TagType, TagStatsQueryType, StockPoolType, InsertMode
-from zvt.tag.tag_models import (
+from zvt.apps.tag.common import TagType, TagStatsQueryType, StockPoolType, InsertMode
+from zvt.apps.tag.tag_models import (
     SetStockTagsModel,
     CreateStockPoolInfoModel,
     CreateStockPoolsModel,
@@ -26,7 +26,7 @@ from zvt.tag.tag_models import (
     ChangeMainTagModel,
     BuildMainTagIndustryRelationModel,
 )
-from zvt.tag.tag_schemas import (
+from zvt.apps.tag.tag_schemas import (
     StockTags,
     StockPools,
     StockPoolInfo,
@@ -37,7 +37,7 @@ from zvt.tag.tag_schemas import (
     HiddenTagInfo,
     IndustryInfo,
 )
-from zvt.tag.tag_utils import (
+from zvt.apps.tag.tag_utils import (
     get_sub_tags,
     get_stock_pool_names,
     get_main_tag_by_sub_tag,

@@ -4,11 +4,11 @@ from typing import List, Optional
 from fastapi import APIRouter, HTTPException
 from fastapi_pagination import Page
 
-import zvt.trading.trading_service as trading_service
+import zvt.apps.trading.trading_service as trading_service
 from zvt.contract.schema import db_session_scope
 from zvt.common.trading_models import BuyParameter, SellParameter, TradingResult
-from zvt.tag.tag_schemas import MainTagInfo
-from zvt.trading.trading_models import (
+from zvt.apps.tag.tag_schemas import MainTagInfo
+from zvt.apps.trading.trading_models import (
     BuildTradingPlanModel,
     TradingPlanModel,
     QueryTradingPlanModel,
@@ -24,7 +24,7 @@ from zvt.trading.trading_models import (
     TSRequestModel,
     QuoteStatsModel,
 )
-from zvt.trading.trading_schemas import QueryStockQuoteSetting
+from zvt.apps.trading.trading_schemas import QueryStockQuoteSetting
 
 trading_router = APIRouter(
     prefix="/api/trading",

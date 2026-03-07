@@ -7,8 +7,8 @@ import pandas as pd
 
 from zvt import zvt_env
 from zvt.domain import Block
-from zvt.tag.common import StockPoolType
-from zvt.tag.tag_schemas import MainTagInfo, SubTagInfo, HiddenTagInfo, StockPoolInfo, IndustryInfo
+from zvt.apps.tag.common import StockPoolType
+from zvt.apps.tag.tag_schemas import MainTagInfo, SubTagInfo, HiddenTagInfo, StockPoolInfo, IndustryInfo
 from zvt.utils.time_utils import now_pd_timestamp
 
 

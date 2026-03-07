@@ -9,9 +9,9 @@ from zvt import init_log
 from zvt.api.selector import get_shoot_today
 from zvt.domain import Stock
 from zvt.informer.inform_utils import add_to_eastmoney
-from zvt.tag.common import InsertMode
-from zvt.tag.tag_schemas import StockPools
-from zvt.tag.tag_stats import refresh_stock_pool
+from zvt.apps.tag.common import InsertMode
+from zvt.apps.tag.tag_schemas import StockPools
+from zvt.apps.tag.tag_stats import refresh_stock_pool
 from zvt.utils.time_utils import (
     now_pd_timestamp,
     current_date,

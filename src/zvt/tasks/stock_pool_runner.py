@@ -21,7 +21,7 @@ from zvt.factors import compute_top_stocks
 from zvt.informer import EmailInformer
 from zvt.informer.inform_utils import inform_email
 from zvt.informer.informer import QiyeWechatBot
-from zvt.tag.tag_stats import build_system_stock_pools, build_stock_pool_tag_stats
+from zvt.apps.tag.tag_stats import build_system_stock_pools, build_stock_pool_tag_stats
 from zvt.utils.recorder_utils import run_data_recorder
 from zvt.utils.time_utils import current_date
 

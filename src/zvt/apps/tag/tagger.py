@@ -8,7 +8,7 @@ from zvt.contract.schema import get_db_session
 from zvt.contract.base_service import OneStateService
 from zvt.contract.zvt_info import TaggerState
 from zvt.domain import Stock
-from zvt.tag.tag_schemas import StockTags
+from zvt.apps.tag.tag_schemas import StockTags
 
 logger = logging.getLogger(__name__)
 

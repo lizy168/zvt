@@ -10,10 +10,10 @@ from zvt.contract import AdjustType, IntervalLevel
 from zvt.contract.schema import get_db_session
 from zvt.domain.quotes import KdataCommon
 from zvt.factors.top_stocks import TopStocks, get_top_stocks
-from zvt.tag.common import InsertMode
-from zvt.tag.tag_models import CreateStockPoolsModel
-from zvt.tag.tag_schemas import TagStats, StockTags, StockPools
-from zvt.tag.tag_service import build_stock_pool
+from zvt.apps.tag.common import InsertMode
+from zvt.apps.tag.tag_models import CreateStockPoolsModel
+from zvt.apps.tag.tag_schemas import TagStats, StockTags, StockPools
+from zvt.apps.tag.tag_service import build_stock_pool
 from zvt.utils.pd_utils import pd_is_not_null
 from zvt.utils.time_utils import to_pd_timestamp, current_date, next_date
 

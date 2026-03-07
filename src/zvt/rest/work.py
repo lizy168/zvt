@@ -4,10 +4,10 @@ from typing import List, Optional
 from fastapi import APIRouter, Depends
 from sqlalchemy.orm import Session
 
-import zvt.tag.tag_service as tag_service
-from zvt.tag.deps import get_tag_db_session
-from zvt.tag.common import TagType
-from zvt.tag.tag_models import (
+import zvt.apps.tag.tag_service as tag_service
+from zvt.apps.tag.deps import get_tag_db_session
+from zvt.apps.tag.common import TagType
+from zvt.apps.tag.tag_models import (
     TagInfoModel,
     CreateTagInfoModel,
     StockTagsModel,
@@ -32,7 +32,7 @@ from zvt.tag.tag_models import (
     BuildMainTagIndustryRelationModel,
     BuildMainTagSubTagRelationModel,
 )
-from zvt.tag.tag_schemas import (
+from zvt.apps.tag.tag_schemas import (
     StockTags,
     MainTagInfo,
     SubTagInfo,

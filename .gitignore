@@ -9,6 +9,13 @@ __pycache__/
 #idea
 .idea
 .vscode
+
+# Cursor (local only, do not commit)
+.cursor/
+
+# Temporary analysis docs (do not commit to repo)
+docs/*_DATA_MODEL*.md
+docs/*_ANALYSIS*.md
 # Distribution / packaging
 .Python
 env/

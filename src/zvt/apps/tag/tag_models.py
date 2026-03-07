@@ -5,8 +5,8 @@ from pydantic import field_validator, Field
 from pydantic_core.core_schema import ValidationInfo
 
 from zvt.contract.model import MixinModel, CustomModel
-from zvt.tag.common import StockPoolType, TagType, TagStatsQueryType, InsertMode
-from zvt.tag.tag_utils import get_stock_pool_names
+from zvt.apps.tag.common import StockPoolType, TagType, TagStatsQueryType, InsertMode
+from zvt.apps.tag.tag_utils import get_stock_pool_names
 
 
 class TagInfoModel(MixinModel):

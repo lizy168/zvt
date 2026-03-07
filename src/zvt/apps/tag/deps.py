@@ -11,7 +11,7 @@ from typing import Generator
 from sqlalchemy.orm import Session
 
 from zvt.contract.schema import get_db_session
-from zvt.tag.tag_schemas import StockTags
+from zvt.apps.tag.tag_schemas import StockTags
 
 
 def get_tag_db_session() -> Generator[Session, None, None]:
