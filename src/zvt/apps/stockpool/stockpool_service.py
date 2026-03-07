@@ -33,7 +33,7 @@ def build_stock_pool_info(
             stock_pool_name=create_stock_pool_info_model.stock_pool_name,
         )
         sess.add(stock_pool_info)
-        sess.refresh(stock_pool_info)
+        sess.flush()
         return stock_pool_info
 
     return _with_app_session(session, StockPoolInfo, _do)
@@ -74,7 +74,7 @@ def build_stock_pool(
                 entity_ids=create_stock_pools_model.entity_ids,
             )
         sess.add(stock_pool)
-        sess.refresh(stock_pool)
+        sess.flush()
         return stock_pool
 
     return _with_app_session(session, StockPools, _do)
