@@ -1,15 +1,13 @@
 # -*- coding: utf-8 -*-
-from sqlalchemy import Column, Float, DateTime, Integer
-from sqlalchemy import String, JSON
-from sqlalchemy.orm import declarative_base
+# Table definitions for trading app; registered to zvt_apps in zvt.apps.__init__
+
+from sqlalchemy import Column, Float, DateTime, Integer, String, JSON
 
 from zvt.contract import Mixin
-from zvt.contract.register import register_schema
-
-TradingBase = declarative_base()
+from zvt.apps.base import AppsBase
 
 
-class TagQuoteStats(Mixin, TradingBase):
+class TagQuoteStats(Mixin, AppsBase):
     __tablename__ = "tag_quote_stats"
     stock_pool_name = Column(String)
     main_tag = Column(String)
@@ -21,7 +19,7 @@ class TagQuoteStats(Mixin, TradingBase):
     turnover = Column(Float)
 
 
-class TradingPlan(TradingBase, Mixin):
+class TradingPlan(AppsBase, Mixin):
     __tablename__ = "trading_plan"
     stock_id = Column(String)
     stock_code = Column(String)
@@ -41,13 +39,10 @@ class TradingPlan(TradingBase, Mixin):
     review = Column(String)
 
 
-class QueryStockQuoteSetting(TradingBase, Mixin):
+class QueryStockQuoteSetting(AppsBase, Mixin):
     __tablename__ = "query_stock_quote_setting"
     stock_pool_name = Column(String)
     main_tags = Column(JSON)
-
-
-register_schema(db_name="stock_trading", schema_base=TradingBase, internal=True)
 
 
 # the __all__ is generated

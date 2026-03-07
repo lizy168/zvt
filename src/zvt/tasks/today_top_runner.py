@@ -12,7 +12,7 @@ from zvt.domain import Stock
 from zvt.informer.inform_utils import add_to_eastmoney
 from zvt.recorders.em.em_api import record_hot_topic
 from zvt.apps.tag.common import InsertMode
-from zvt.apps.tag.tag_schemas import StockPools
+from zvt.apps.stockpool.stockpool_schemas import StockPools
 from zvt.apps.tag.tag_stats import refresh_stock_pool
 from zvt.utils.time_utils import now_pd_timestamp, current_date
 

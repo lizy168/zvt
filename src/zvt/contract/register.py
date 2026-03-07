@@ -28,7 +28,7 @@ def ensure_schema_tables_and_indexes(engine, schema_base: DeclarativeMeta, db_na
         added_columns = [c for c in table.columns if c.name not in existing_columns]
         index_list = []
         with engine.connect() as con:
-            if db_name in ("zvt_info", "stock_news", "stock_tags", "stock_quote"):
+            if db_name in ("zvt_info", "stock_news", "stock_quote", "zvt_apps"):
                 con.execute(text("PRAGMA journal_mode=WAL;"))
                 con.execute(text("PRAGMA journal_size_limit=1073741824;"))
             else:

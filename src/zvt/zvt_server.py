@@ -9,6 +9,7 @@ from fastapi_pagination import add_pagination
 
 from zvt import zvt_env
 from zvt.rest.misc import misc_router
+from zvt.rest.stockpool import stockpool_router
 from zvt.rest.trading import trading_router
 from zvt.rest.work import work_router
 
@@ -31,6 +32,7 @@ async def root():
 
 
 app.include_router(work_router)
+app.include_router(stockpool_router)
 app.include_router(trading_router)
 app.include_router(misc_router)
 

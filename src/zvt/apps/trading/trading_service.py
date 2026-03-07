@@ -13,7 +13,8 @@ from zvt.contract.schema import db_session_scope
 from zvt.domain import Stock, StockQuote, Stock1mQuote
 from zvt.domain.quotes.stockhk.stockhk_quote import StockhkQuote
 from zvt.domain.quotes.stockus.stockus_quote import StockusQuote
-from zvt.apps.tag.tag_schemas import StockTags, StockPools, StockPoolInfo
+from zvt.apps.tag.tag_schemas import StockTags
+from zvt.apps.stockpool.stockpool_schemas import StockPools, StockPoolInfo
 from zvt.apps.trading.common import ExecutionStatus
 from zvt.apps.trading.trading_models import (
     BuildTradingPlanModel,

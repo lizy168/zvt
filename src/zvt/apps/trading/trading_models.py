@@ -9,7 +9,7 @@ from pydantic import field_validator
 from zvt.common.query_models import TimeRange, OrderByType
 from zvt.contract import IntervalLevel, AdjustType
 from zvt.contract.model import MixinModel, CustomModel
-from zvt.apps.tag.tag_utils import get_stock_pool_names
+from zvt.apps.stockpool.stockpool_utils import get_stock_pool_names
 from zvt.trader import TradingSignalType
 from zvt.apps.trading.common import ExecutionStatus
 from zvt.utils.time_utils import date_time_by_interval, current_date

@@ -1,15 +1,13 @@
 # -*- coding: utf-8 -*-
+# Table definitions for tag app; registered to zvt_apps in zvt.apps.__init__
 
 from sqlalchemy import Column, String, JSON, Boolean, Float, Integer
-from sqlalchemy.orm import declarative_base
 
 from zvt.contract import Mixin
-from zvt.contract.register import register_schema
-
-StockTagsBase = declarative_base()
+from zvt.apps.base import AppsBase
 
 
-class IndustryInfo(StockTagsBase, Mixin):
+class IndustryInfo(AppsBase, Mixin):
     __tablename__ = "industry_info"
 
     industry_name = Column(String, unique=True)
@@ -18,14 +16,14 @@ class IndustryInfo(StockTagsBase, Mixin):
     main_tag = Column(String)
 
 
-class MainTagInfo(StockTagsBase, Mixin):
+class MainTagInfo(AppsBase, Mixin):
     __tablename__ = "main_tag_info"
 
     tag = Column(String, unique=True)
     tag_reason = Column(String)
 
 
-class SubTagInfo(StockTagsBase, Mixin):
+class SubTagInfo(AppsBase, Mixin):
     __tablename__ = "sub_tag_info"
 
     tag = Column(String, unique=True)
@@ -35,14 +33,14 @@ class SubTagInfo(StockTagsBase, Mixin):
     main_tag = Column(String)
 
 
-class HiddenTagInfo(StockTagsBase, Mixin):
+class HiddenTagInfo(AppsBase, Mixin):
     __tablename__ = "hidden_tag_info"
 
     tag = Column(String, unique=True)
     tag_reason = Column(String)
 
 
-class StockTags(StockTagsBase, Mixin):
+class StockTags(AppsBase, Mixin):
     """
     Schema for storing stock tags
     """
@@ -67,7 +65,7 @@ class StockTags(StockTagsBase, Mixin):
     set_by_user = Column(Boolean, default=False)
 
 
-class StockSystemTags(StockTagsBase, Mixin):
+class StockSystemTags(AppsBase, Mixin):
     __tablename__ = "stock_system_tags"
     #: 编码
     code = Column(String(length=64))
@@ -97,22 +95,7 @@ class StockSystemTags(StockTagsBase, Mixin):
     recent_news_summary = Column(JSON)
 
 
-class StockPoolInfo(StockTagsBase, Mixin):
-    __tablename__ = "stock_pool_info"
-    stock_pool_type = Column(String)
-    stock_pool_name = Column(String, unique=True)
-
-
-class StockPools(StockTagsBase, Mixin):
-    __tablename__ = "stock_pools"
-
-    entity_type = Column(String(length=64))
-
-    stock_pool_name = Column(String)
-    entity_ids = Column(JSON)
-
-
-class TagStats(StockTagsBase, Mixin):
+class TagStats(AppsBase, Mixin):
     __tablename__ = "tag_stats"
 
     entity_type = Column(String(length=64))
@@ -127,9 +110,6 @@ class TagStats(StockTagsBase, Mixin):
     entity_ids = Column(JSON)
 
 
-register_schema(db_name="stock_tags", schema_base=StockTagsBase, internal=True)
-
-
 # the __all__ is generated
 __all__ = [
     "IndustryInfo",
@@ -138,7 +118,5 @@ __all__ = [
     "HiddenTagInfo",
     "StockTags",
     "StockSystemTags",
-    "StockPoolInfo",
-    "StockPools",
     "TagStats",
 ]

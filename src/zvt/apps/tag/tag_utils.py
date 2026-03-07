@@ -7,8 +7,7 @@ import pandas as pd
 
 from zvt import zvt_env
 from zvt.domain import Block
-from zvt.apps.tag.common import StockPoolType
-from zvt.apps.tag.tag_schemas import MainTagInfo, SubTagInfo, HiddenTagInfo, StockPoolInfo, IndustryInfo
+from zvt.apps.tag.tag_schemas import MainTagInfo, SubTagInfo, HiddenTagInfo, IndustryInfo
 from zvt.utils.time_utils import now_pd_timestamp
 
 
@@ -141,21 +140,6 @@ def _get_initial_sub_tag_info():
     ]
 
 
-def _get_initial_stock_pool_info():
-    timestamp = now_pd_timestamp()
-    entity_id = "admin"
-    return [
-        {
-            "id": f"{entity_id}_{stock_pool_name}",
-            "entity_id": entity_id,
-            "timestamp": timestamp,
-            "stock_pool_type": StockPoolType.system.value,
-            "stock_pool_name": stock_pool_name,
-        }
-        for stock_pool_name in ["主线", "年线", "大局", "A股", "美股主线", "港股主线"]
-    ]
-
-
 _hidden_tags = {
     "中字头": "央企，国资委控股",
     "核心资产": "高ROE 高现金流 高股息 低应收 低资本开支 低财务杠杆 有增长",
@@ -198,12 +182,6 @@ def build_initial_sub_tag_info(force_update=False):
     SubTagInfo.df_to_db(df, provider="zvt", force_update=force_update)
 
 
-def build_initial_stock_pool_info(force_update=False):
-    stock_pool_info_list = _get_initial_stock_pool_info()
-    df = pd.DataFrame.from_records(stock_pool_info_list)
-    StockPoolInfo.df_to_db(df, provider="zvt", force_update=force_update)
-
-
 def build_initial_hidden_tag_info(force_update=False):
     hidden_tag_info_list = _get_initial_hidden_tag_info()
     df = pd.DataFrame.from_records(hidden_tag_info_list)
@@ -239,11 +217,6 @@ def get_sub_tags():
 def get_hidden_tags():
     df = HiddenTagInfo.query_data(columns=[HiddenTagInfo.tag])
     return df["tag"].tolist()
-
-
-def get_stock_pool_names():
-    df = StockPoolInfo.query_data(columns=[StockPoolInfo.stock_pool_name])
-    return df["stock_pool_name"].tolist()
 
 
 def match_tag_by_type(alias, tag_type="main_tag"):
@@ -298,14 +271,12 @@ __all__ = [
     "build_initial_main_tag_info",
     "build_initial_industry_info",
     "build_initial_sub_tag_info",
-    "build_initial_stock_pool_info",
     "build_initial_hidden_tag_info",
     "get_main_tags",
     "get_main_tag_by_sub_tag",
     "get_main_tag_by_industry",
     "get_sub_tags",
     "get_hidden_tags",
-    "get_stock_pool_names",
     "match_tag_by_type",
     "match_tag",
 ]
